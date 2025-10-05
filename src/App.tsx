@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { TrendingUp, Users, Building2, RefreshCw } from 'lucide-react';
 import RatioCard from './components/RatioCard';
 import LineChart from './components/LineChart';
-import { fetchGlobalLongShortRatio, fetchTopTraderLongShortRatio } from './services/binance';
+import { fetchGlobalLongShortRatio, fetchTopTraderLongShortRatio, fetchKlineData } from './services/binance';
 import { calculateRetailRatio } from './utils/calculations';
 import { RatioData, ChartDataPoint } from './types';
 
@@ -10,6 +10,7 @@ function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [period, setPeriod] = useState('5m');
   const [bigUserProportion, setBigUserProportion] = useState(0.2);
+  const [showPrice, setShowPrice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -23,10 +24,19 @@ function App() {
     setError(null);
 
     try {
-      const [globalRatios, topTraderRatios] = await Promise.all([
+      const promises = [
         fetchGlobalLongShortRatio(symbol, period, 30),
         fetchTopTraderLongShortRatio(symbol, period, 30)
-      ]);
+      ];
+
+      if (showPrice) {
+        promises.push(fetchKlineData(symbol, period, 30));
+      }
+
+      const results = await Promise.all(promises);
+      const globalRatios = results[0] as any[];
+      const topTraderRatios = results[1] as any[];
+      const klineData = showPrice && results[2] ? results[2] as any[] : null;
 
       if (globalRatios.length > 0 && topTraderRatios.length > 0) {
         setGlobalData(globalRatios[globalRatios.length - 1]);
@@ -40,6 +50,9 @@ function App() {
           const bigUserRatio = parseFloat(topTrader.longShortRatio);
           const retail = calculateRetailRatio(totalRatio, bigUserRatio, bigUserProportion);
 
+          const kline = klineData ? klineData[index] : null;
+          const price = kline ? parseFloat(kline.close) : undefined;
+
           return {
             timestamp: global.timestamp,
             retailRatio: retail.retailRatio,
@@ -50,7 +63,8 @@ function App() {
             totalLong: parseFloat(global.longAccount) * 100,
             totalShort: parseFloat(global.shortAccount) * 100,
             bigUserLong: parseFloat(topTrader.longAccount) * 100,
-            bigUserShort: parseFloat(topTrader.shortAccount) * 100
+            bigUserShort: parseFloat(topTrader.shortAccount) * 100,
+            price
           };
         }).filter(Boolean) as ChartDataPoint[];
 
@@ -68,7 +82,7 @@ function App() {
     fetchData();
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
-  }, [symbol, period, bigUserProportion]);
+  }, [symbol, period, bigUserProportion, showPrice]);
 
   const retailData = globalData && topTraderData
     ? calculateRetailRatio(
@@ -141,6 +155,19 @@ function App() {
               />
             </div>
 
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showPrice"
+                checked={showPrice}
+                onChange={(e) => setShowPrice(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="showPrice" className="text-sm font-medium text-gray-700">
+                显示价格曲线
+              </label>
+            </div>
+
             <button
               onClick={fetchData}
               disabled={loading}
@@ -201,7 +228,7 @@ function App() {
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             散户多空比走势图
           </h2>
-          <LineChart data={chartData} />
+          <LineChart data={chartData} showPrice={showPrice} />
         </div>
 
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">

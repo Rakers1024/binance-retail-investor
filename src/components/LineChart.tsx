@@ -4,9 +4,10 @@ import { formatTimestamp, formatDate } from '../utils/calculations';
 
 interface LineChartProps {
   data: ChartDataPoint[];
+  showPrice: boolean;
 }
 
-export default function LineChart({ data }: LineChartProps) {
+export default function LineChart({ data, showPrice }: LineChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -23,14 +24,25 @@ export default function LineChart({ data }: LineChartProps) {
   const range = maxRatio - minRatio;
   const padding = range * 0.1;
 
+  const prices = data.map(d => d.price).filter(p => p !== undefined) as number[];
+  const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+  const priceRange = maxPrice - minPrice;
+  const pricePadding = priceRange * 0.1;
+
   const chartHeight = 280;
   const chartWidth = 1000;
   const leftMargin = 40;
-  const rightMargin = 10;
+  const rightMargin = showPrice ? 60 : 10;
   const chartArea = chartWidth - leftMargin - rightMargin;
 
   const getY = (value: number) => {
     return chartHeight - ((value - (minRatio - padding)) / (range + padding * 2)) * chartHeight;
+  };
+
+  const getPriceY = (price: number) => {
+    if (priceRange === 0) return chartHeight / 2;
+    return chartHeight - ((price - (minPrice - pricePadding)) / (priceRange + pricePadding * 2)) * chartHeight;
   };
 
   const getX = (index: number) => {
@@ -41,6 +53,15 @@ export default function LineChart({ data }: LineChartProps) {
     return data.map((point, index) => {
       const x = getX(index);
       const y = getY(point[dataKey]);
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ');
+  };
+
+  const createPricePath = () => {
+    return data.map((point, index) => {
+      if (!point.price) return '';
+      const x = getX(index);
+      const y = getPriceY(point.price);
       return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
     }).join(' ');
   };
@@ -74,6 +95,10 @@ export default function LineChart({ data }: LineChartProps) {
   const yAxisValues = Array.from({ length: gridLines }, (_, i) => {
     return minRatio - padding + ((range + padding * 2) / (gridLines - 1)) * i;
   });
+
+  const priceAxisValues = showPrice && prices.length > 0 ? Array.from({ length: gridLines }, (_, i) => {
+    return minPrice - pricePadding + ((priceRange + pricePadding * 2) / (gridLines - 1)) * i;
+  }) : [];
 
   return (
     <div className="relative w-full h-80">
@@ -113,6 +138,20 @@ export default function LineChart({ data }: LineChartProps) {
           </g>
         ))}
 
+        {showPrice && priceAxisValues.map((value, i) => (
+          <text
+            key={`price-${i}`}
+            x={chartWidth - rightMargin + 5}
+            y={getPriceY(value)}
+            fontSize="12"
+            fill="#a78bfa"
+            textAnchor="start"
+            dominantBaseline="middle"
+          >
+            ${value.toFixed(0)}
+          </text>
+        ))}
+
         <path
           d={createPath('totalRatio')}
           fill="none"
@@ -135,6 +174,17 @@ export default function LineChart({ data }: LineChartProps) {
           stroke="rgb(59, 130, 246)"
           strokeWidth="3"
         />
+
+        {showPrice && prices.length > 0 && (
+          <path
+            d={createPricePath()}
+            fill="none"
+            stroke="#a78bfa"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+            opacity="0.7"
+          />
+        )}
 
         <path
           d={`${createPath('retailRatio')} L ${chartWidth - rightMargin} ${chartHeight} L ${leftMargin} ${chartHeight} Z`}
@@ -176,6 +226,16 @@ export default function LineChart({ data }: LineChartProps) {
               stroke="white"
               strokeWidth="2"
             />
+            {showPrice && data[hoveredPoint].price && (
+              <circle
+                cx={getX(hoveredPoint)}
+                cy={getPriceY(data[hoveredPoint].price!)}
+                r="4"
+                fill="#a78bfa"
+                stroke="white"
+                strokeWidth="2"
+              />
+            )}
           </>
         )}
       </svg>
@@ -199,6 +259,12 @@ export default function LineChart({ data }: LineChartProps) {
           <div className="w-3 h-0.5 bg-amber-500 opacity-50"></div>
           <span>大户</span>
         </div>
+        {showPrice && (
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-0.5 bg-violet-400 opacity-70" style={{ borderTop: '2px dashed' }}></div>
+            <span>价格</span>
+          </div>
+        )}
       </div>
 
       {hoveredPoint !== null && mousePosition && (
@@ -278,6 +344,15 @@ export default function LineChart({ data }: LineChartProps) {
                   </div>
                 )}
               </div>
+
+              {showPrice && data[hoveredPoint].price && (
+                <div className="bg-violet-900/30 rounded-lg p-2.5 border border-violet-700/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-violet-300 font-semibold text-xs">价格</span>
+                    <span className="font-bold text-sm text-violet-200">${data[hoveredPoint].price!.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
