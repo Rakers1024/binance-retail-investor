@@ -23,11 +23,14 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
     const ma7Percent = data.map(d => d.ma120 ? ((d.ma120 - basePrice) / basePrice) * 100 : null);
     const ma25Percent = data.map(d => d.ma240 ? ((d.ma240 - basePrice) / basePrice) * 100 : null);
 
+    const prices = data.map(d => d.price ?? null);
+
     const series: any[] = [
       {
         name: '散户多空比变化%',
         type: 'line',
         data: retailRatioPercent,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'circle',
         symbolSize: 6,
@@ -59,6 +62,7 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
         name: '价格变化%',
         type: 'line',
         data: pricePercent,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'circle',
         symbolSize: 6,
@@ -69,14 +73,31 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
         itemStyle: {
           color: '#a78bfa'
         }
+      },
+      {
+        name: '价格（原始）',
+        type: 'line',
+        data: prices,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#fbbf24',
+          width: 1.5,
+          type: 'dashed'
+        }
       }
     ];
+
+    const ma7Original = data.map(d => d.ma120 ?? null);
+    const ma25Original = data.map(d => d.ma240 ?? null);
 
     if (ma7Percent.some(m => m !== null)) {
       series.push({
         name: 'MA7变化%',
         type: 'line',
         data: ma7Percent,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'none',
         lineStyle: {
@@ -91,11 +112,44 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
         name: 'MA25变化%',
         type: 'line',
         data: ma25Percent,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'none',
         lineStyle: {
           color: '#22c55e',
           width: 1.5
+        }
+      });
+    }
+
+    if (ma7Original.some(m => m !== null)) {
+      series.push({
+        name: 'MA7（原始）',
+        type: 'line',
+        data: ma7Original,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#86efac',
+          width: 1,
+          type: 'dotted'
+        }
+      });
+    }
+
+    if (ma25Original.some(m => m !== null)) {
+      series.push({
+        name: 'MA25（原始）',
+        type: 'line',
+        data: ma25Original,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#22c55e',
+          width: 1,
+          type: 'dotted'
         }
       });
     }
@@ -149,7 +203,7 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
       },
       grid: {
         left: '50',
-        right: '50',
+        right: '70',
         top: '40',
         bottom: '40',
         containLabel: false
@@ -168,27 +222,49 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
           }
         }
       },
-      yAxis: {
-        type: 'value',
-        name: '变化百分比 (%)',
-        scale: true,
-        axisLabel: {
-          formatter: '{value}%',
-          color: '#9ca3af'
-        },
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#e5e7eb'
+      yAxis: [
+        {
+          type: 'value',
+          name: '变化百分比 (%)',
+          position: 'left',
+          scale: true,
+          axisLabel: {
+            formatter: '{value}%',
+            color: '#9ca3af'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#e5e7eb'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#e5e7eb',
+              opacity: 0.2
+            }
           }
         },
-        splitLine: {
-          lineStyle: {
-            color: '#e5e7eb',
-            opacity: 0.2
+        {
+          type: 'value',
+          name: '价格 ($)',
+          position: 'right',
+          scale: true,
+          axisLabel: {
+            formatter: '${value}',
+            color: '#fbbf24'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#fbbf24'
+            }
+          },
+          splitLine: {
+            show: false
           }
         }
-      },
+      ],
       series: series
     };
   }, [data]);

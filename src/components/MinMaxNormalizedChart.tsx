@@ -33,11 +33,14 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
     const normalizedMa7 = data.map(d => d.ma120 ? ((d.ma120 - minMa7) / (maxMa7 - minMa7)) * 100 : null);
     const normalizedMa25 = data.map(d => d.ma240 ? ((d.ma240 - minMa25) / (maxMa25 - minMa25)) * 100 : null);
 
+    const pricesOriginal = data.map(d => d.price ?? null);
+
     const series: any[] = [
       {
         name: '散户多空比 (归一)',
         type: 'line',
         data: normalizedRetailRatio,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'circle',
         symbolSize: 6,
@@ -69,6 +72,7 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
         name: '价格 (归一)',
         type: 'line',
         data: normalizedPrice,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'circle',
         symbolSize: 6,
@@ -79,14 +83,31 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
         itemStyle: {
           color: '#a78bfa'
         }
+      },
+      {
+        name: '价格（原始）',
+        type: 'line',
+        data: pricesOriginal,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#fbbf24',
+          width: 1.5,
+          type: 'dashed'
+        }
       }
     ];
+
+    const ma7Original = data.map(d => d.ma120 ?? null);
+    const ma25Original = data.map(d => d.ma240 ?? null);
 
     if (normalizedMa7.some(m => m !== null)) {
       series.push({
         name: 'MA7 (归一)',
         type: 'line',
         data: normalizedMa7,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'none',
         lineStyle: {
@@ -101,11 +122,44 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
         name: 'MA25 (归一)',
         type: 'line',
         data: normalizedMa25,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'none',
         lineStyle: {
           color: '#22c55e',
           width: 1.5
+        }
+      });
+    }
+
+    if (ma7Original.some(m => m !== null)) {
+      series.push({
+        name: 'MA7（原始）',
+        type: 'line',
+        data: ma7Original,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#86efac',
+          width: 1,
+          type: 'dotted'
+        }
+      });
+    }
+
+    if (ma25Original.some(m => m !== null)) {
+      series.push({
+        name: 'MA25（原始）',
+        type: 'line',
+        data: ma25Original,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#22c55e',
+          width: 1,
+          type: 'dotted'
         }
       });
     }
@@ -163,7 +217,7 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
       },
       grid: {
         left: '50',
-        right: '50',
+        right: '70',
         top: '40',
         bottom: '40',
         containLabel: false
@@ -182,28 +236,50 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
           }
         }
       },
-      yAxis: {
-        type: 'value',
-        name: '归一化值 (0-100)',
-        min: 0,
-        max: 100,
-        axisLabel: {
-          formatter: '{value}',
-          color: '#9ca3af'
-        },
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#e5e7eb'
+      yAxis: [
+        {
+          type: 'value',
+          name: '归一化值 (0-100)',
+          position: 'left',
+          min: 0,
+          max: 100,
+          axisLabel: {
+            formatter: '{value}',
+            color: '#9ca3af'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#e5e7eb'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#e5e7eb',
+              opacity: 0.2
+            }
           }
         },
-        splitLine: {
-          lineStyle: {
-            color: '#e5e7eb',
-            opacity: 0.2
+        {
+          type: 'value',
+          name: '价格 ($)',
+          position: 'right',
+          scale: true,
+          axisLabel: {
+            formatter: '${value}',
+            color: '#fbbf24'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#fbbf24'
+            }
+          },
+          splitLine: {
+            show: false
           }
         }
-      },
+      ],
       series: series
     };
   }, [data]);

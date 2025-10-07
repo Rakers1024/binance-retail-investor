@@ -40,11 +40,14 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
     const zMa7Mapped = data.map(d => d.ma120 ? zMa7[ma7Index++] : null);
     const zMa25Mapped = data.map(d => d.ma240 ? zMa25[ma25Index++] : null);
 
+    const pricesOriginal = data.map(d => d.price ?? null);
+
     const series: any[] = [
       {
         name: '散户多空比 Z-Score',
         type: 'line',
         data: zRetailRatios,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'circle',
         symbolSize: 6,
@@ -76,6 +79,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         name: '价格 Z-Score',
         type: 'line',
         data: zPrices,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'circle',
         symbolSize: 6,
@@ -86,14 +90,31 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         itemStyle: {
           color: '#a78bfa'
         }
+      },
+      {
+        name: '价格（原始）',
+        type: 'line',
+        data: pricesOriginal,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#fbbf24',
+          width: 1.5,
+          type: 'dashed'
+        }
       }
     ];
+
+    const ma7Original = data.map(d => d.ma120 ?? null);
+    const ma25Original = data.map(d => d.ma240 ?? null);
 
     if (zMa7Mapped.some(m => m !== null)) {
       series.push({
         name: 'MA7 Z-Score',
         type: 'line',
         data: zMa7Mapped,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'none',
         lineStyle: {
@@ -108,11 +129,44 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         name: 'MA25 Z-Score',
         type: 'line',
         data: zMa25Mapped,
+        yAxisIndex: 0,
         smooth: false,
         symbol: 'none',
         lineStyle: {
           color: '#22c55e',
           width: 1.5
+        }
+      });
+    }
+
+    if (ma7Original.some(m => m !== null)) {
+      series.push({
+        name: 'MA7（原始）',
+        type: 'line',
+        data: ma7Original,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#86efac',
+          width: 1,
+          type: 'dotted'
+        }
+      });
+    }
+
+    if (ma25Original.some(m => m !== null)) {
+      series.push({
+        name: 'MA25（原始）',
+        type: 'line',
+        data: ma25Original,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          color: '#22c55e',
+          width: 1,
+          type: 'dotted'
         }
       });
     }
@@ -175,7 +229,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       },
       grid: {
         left: '50',
-        right: '50',
+        right: '70',
         top: '40',
         bottom: '40',
         containLabel: false
@@ -194,27 +248,49 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
           }
         }
       },
-      yAxis: {
-        type: 'value',
-        name: 'Z-Score',
-        scale: true,
-        axisLabel: {
-          formatter: '{value}',
-          color: '#9ca3af'
-        },
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#e5e7eb'
+      yAxis: [
+        {
+          type: 'value',
+          name: 'Z-Score',
+          position: 'left',
+          scale: true,
+          axisLabel: {
+            formatter: '{value}',
+            color: '#9ca3af'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#e5e7eb'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#e5e7eb',
+              opacity: 0.2
+            }
           }
         },
-        splitLine: {
-          lineStyle: {
-            color: '#e5e7eb',
-            opacity: 0.2
+        {
+          type: 'value',
+          name: '价格 ($)',
+          position: 'right',
+          scale: true,
+          axisLabel: {
+            formatter: '${value}',
+            color: '#fbbf24'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#fbbf24'
+            }
+          },
+          splitLine: {
+            show: false
           }
         }
-      },
+      ],
       series: series,
       visualMap: {
         show: false,
