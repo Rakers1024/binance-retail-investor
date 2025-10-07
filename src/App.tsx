@@ -10,7 +10,7 @@ function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [period, setPeriod] = useState('5m');
   const [bigUserProportion, setBigUserProportion] = useState(0.2);
-  const [showPrice, setShowPrice] = useState(false);
+  const [showPrice, setShowPrice] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
