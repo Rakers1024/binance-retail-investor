@@ -293,13 +293,16 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       },
       legend: {
         data: series.map(s => s.name),
-        top: 0,
-        right: 0,
+        top: 10,
+        right: 20,
         textStyle: {
           color: '#6b7280',
           fontSize: 12
         },
-        icon: 'line'
+        icon: 'rect',
+        itemWidth: 20,
+        itemHeight: 3,
+        itemGap: 15
       },
       grid: {
         left: '50',
