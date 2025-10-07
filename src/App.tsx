@@ -8,6 +8,8 @@ import { RatioData, ChartDataPoint } from './types';
 
 function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
+  const [inputSymbol, setInputSymbol] = useState('BTCUSDT');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [period, setPeriod] = useState('5m');
   const [bigUserProportion, setBigUserProportion] = useState(0.2);
   const [showPrice, setShowPrice] = useState(true);
@@ -121,21 +123,47 @@ function App() {
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex flex-wrap gap-4 items-end">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 交易对
               </label>
-              <select
-                value={symbol}
-                onChange={(e) => setSymbol(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="BTCUSDT">BTC/USDT</option>
-                <option value="ETHUSDT">ETH/USDT</option>
-                <option value="BNBUSDT">BNB/USDT</option>
-                <option value="SOLUSDT">SOL/USDT</option>
-                <option value="ADAUSDT">ADA/USDT</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={inputSymbol}
+                  onChange={(e) => setInputSymbol(e.target.value.toUpperCase())}
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setSymbol(inputSymbol);
+                      setShowDropdown(false);
+                    }
+                  }}
+                  placeholder="输入交易对，如 BTCUSDT"
+                  className="w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {showDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT', 'DOGEUSDT', 'XRPUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT']
+                      .filter(s => s.includes(inputSymbol))
+                      .map(s => (
+                        <div
+                          key={s}
+                          onClick={() => {
+                            setInputSymbol(s);
+                            setSymbol(s);
+                            setShowDropdown(false);
+                          }}
+                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                        >
+                          {s.replace('USDT', '/USDT')}
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
