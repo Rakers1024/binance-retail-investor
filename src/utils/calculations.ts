@@ -18,8 +18,8 @@ export function calculateRetailRatio(
 
   return {
     retailRatio,
-    retailLong: retailLong * 100,
-    retailShort: retailShort * 100
+    retailLong,
+    retailShort
   };
 }
 
