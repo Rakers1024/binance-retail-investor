@@ -207,16 +207,25 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
             <div style="display: flex; flex-direction: column; gap: 8px;">`;
 
           params.forEach(param => {
+            let displayValue = param.value !== null ? param.value.toFixed(2) : 'N/A';
+            let unit = '';
+
+            if (param.seriesName.includes('原始')) {
+              if (param.seriesName.includes('价格')) {
+                displayValue = param.value !== null ? `$${param.value.toFixed(2)}` : 'N/A';
+              }
+            }
+
             tooltip += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
               <span style="color: ${param.color};">●</span>
               <span style="color: #d1d5db; flex: 1;">${param.seriesName}:</span>
-              <span style="color: ${param.color}; font-weight: bold;">${param.value !== null ? param.value.toFixed(2) : 'N/A'}</span>
+              <span style="color: ${param.color}; font-weight: bold;">${displayValue}${unit}</span>
             </div>`;
           });
 
           tooltip += `</div>
-            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #374151; font-size: 10px; color: #9ca3af;">
-              原始值: 散户=${point.retailRatio.toFixed(3)}, 价格=$${point.price?.toFixed(2)}
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #374151; font-size: 11px; color: #9ca3af;">
+              原始值: 散户=${point.retailRatio.toFixed(3)}, 大户=${point.bigUserRatio.toFixed(3)}, 价格=$${point.price?.toFixed(2)}
             </div>
           </div>`;
           return tooltip;
