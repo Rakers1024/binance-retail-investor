@@ -14,12 +14,15 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
     }
 
     const retailRatios = data.map(d => d.retailRatio);
+    const bigUserRatios = data.map(d => d.bigUserRatio);
     const prices = data.map(d => d.price!).filter(p => p !== null && p !== undefined);
     const ma7Data = data.map(d => d.ma120).filter(m => m !== null && m !== undefined) as number[];
     const ma25Data = data.map(d => d.ma240).filter(m => m !== null && m !== undefined) as number[];
 
-    const minRatio = Math.min(...retailRatios);
-    const maxRatio = Math.max(...retailRatios);
+    const minRetailRatio = Math.min(...retailRatios);
+    const maxRetailRatio = Math.max(...retailRatios);
+    const minBigUserRatio = Math.min(...bigUserRatios);
+    const maxBigUserRatio = Math.max(...bigUserRatios);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const minMa7 = ma7Data.length > 0 ? Math.min(...ma7Data) : minPrice;
@@ -28,7 +31,8 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
     const maxMa25 = ma25Data.length > 0 ? Math.max(...ma25Data) : maxPrice;
 
     const timestamps = data.map(d => formatTimestamp(d.timestamp));
-    const normalizedRetailRatio = retailRatios.map(r => ((r - minRatio) / (maxRatio - minRatio)) * 100);
+    const normalizedRetailRatio = retailRatios.map(r => ((r - minRetailRatio) / (maxRetailRatio - minRetailRatio)) * 100);
+    const normalizedBigUserRatio = bigUserRatios.map(r => ((r - minBigUserRatio) / (maxBigUserRatio - minBigUserRatio)) * 100);
     const normalizedPrice = data.map(d => d.price ? ((d.price - minPrice) / (maxPrice - minPrice)) * 100 : null);
     const normalizedMa7 = data.map(d => d.ma120 ? ((d.ma120 - minMa7) / (maxMa7 - minMa7)) * 100 : null);
     const normalizedMa25 = data.map(d => d.ma240 ? ((d.ma240 - minMa25) / (maxMa25 - minMa25)) * 100 : null);
@@ -66,6 +70,22 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
               color: 'rgba(59, 130, 246, 0)'
             }]
           }
+        }
+      },
+      {
+        name: '大户多空比 (归一)',
+        type: 'line',
+        data: normalizedBigUserRatio,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#f59e0b',
+          width: 2
+        },
+        itemStyle: {
+          color: '#f59e0b'
         }
       },
       {

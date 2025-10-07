@@ -14,10 +14,12 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
     }
 
     const baseRetailRatio = data[0].retailRatio;
+    const baseBigUserRatio = data[0].bigUserRatio;
     const basePrice = data[0].price!;
 
     const timestamps = data.map(d => formatTimestamp(d.timestamp));
     const retailRatioPercent = data.map(d => ((d.retailRatio - baseRetailRatio) / baseRetailRatio) * 100);
+    const bigUserRatioPercent = data.map(d => ((d.bigUserRatio - baseBigUserRatio) / baseBigUserRatio) * 100);
     const pricePercent = data.map(d => d.price ? ((d.price - basePrice) / basePrice) * 100 : null);
 
     const ma7Percent = data.map(d => d.ma120 ? ((d.ma120 - basePrice) / basePrice) * 100 : null);
@@ -56,6 +58,22 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
               color: 'rgba(59, 130, 246, 0)'
             }]
           }
+        }
+      },
+      {
+        name: '大户多空比变化%',
+        type: 'line',
+        data: bigUserRatioPercent,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#f59e0b',
+          width: 2
+        },
+        itemStyle: {
+          color: '#f59e0b'
         }
       },
       {

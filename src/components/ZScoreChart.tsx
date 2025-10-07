@@ -24,11 +24,13 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
     }
 
     const retailRatios = data.map(d => d.retailRatio);
+    const bigUserRatios = data.map(d => d.bigUserRatio);
     const prices = data.map(d => d.price!);
     const ma7Data = data.map(d => d.ma120 || 0);
     const ma25Data = data.map(d => d.ma240 || 0);
 
     const zRetailRatios = calculateZScore(retailRatios);
+    const zBigUserRatios = calculateZScore(bigUserRatios);
     const zPrices = calculateZScore(prices.filter(p => p !== null && p !== undefined));
     const zMa7 = calculateZScore(ma7Data.filter(m => m !== null && m !== undefined && m !== 0));
     const zMa25 = calculateZScore(ma25Data.filter(m => m !== null && m !== undefined && m !== 0));
@@ -73,6 +75,22 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
               color: 'rgba(59, 130, 246, 0)'
             }]
           }
+        }
+      },
+      {
+        name: '大户多空比 Z-Score',
+        type: 'line',
+        data: zBigUserRatios,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#f59e0b',
+          width: 2
+        },
+        itemStyle: {
+          color: '#f59e0b'
         }
       },
       {
