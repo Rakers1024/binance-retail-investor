@@ -339,7 +339,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
   }
 
   return (
-    <div className="w-full h-80">
+    <div className="w-full h-full">
       <ReactECharts
         option={option}
         style={{ height: '100%', width: '100%' }}
