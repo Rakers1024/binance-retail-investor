@@ -294,7 +294,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       legend: {
         data: series.map(s => s.name),
         top: 10,
-        right: 20,
+        left: 'center',
         textStyle: {
           color: '#6b7280',
           fontSize: 12
