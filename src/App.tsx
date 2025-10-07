@@ -3,7 +3,7 @@ import { TrendingUp, Users, Building2, RefreshCw } from 'lucide-react';
 import RatioCard from './components/RatioCard';
 import LineChart from './components/LineChart';
 import { fetchGlobalLongShortRatio, fetchTopTraderLongShortRatio, fetchKlineData } from './services/binance';
-import { calculateRetailRatio } from './utils/calculations';
+import { calculateRetailRatio, calculateMA } from './utils/calculations';
 import { RatioData, ChartDataPoint } from './types';
 
 function App() {
@@ -30,7 +30,7 @@ function App() {
       ];
 
       if (showPrice) {
-        promises.push(fetchKlineData(symbol, period, 30));
+        promises.push(fetchKlineData(symbol, period, 1000));
       }
 
       const results = await Promise.all(promises);
@@ -42,6 +42,19 @@ function App() {
         setGlobalData(globalRatios[globalRatios.length - 1]);
         setTopTraderData(topTraderRatios[topTraderRatios.length - 1]);
 
+        let ma120Values: (number | null)[] = [];
+        let ma240Values: (number | null)[] = [];
+
+        if (klineData && klineData.length > 0) {
+          const allPrices = klineData.map((k: any) => parseFloat(k.close));
+          const allMA120 = calculateMA(allPrices, 120);
+          const allMA240 = calculateMA(allPrices, 240);
+
+          const startIndex = klineData.length - globalRatios.length;
+          ma120Values = allMA120.slice(startIndex);
+          ma240Values = allMA240.slice(startIndex);
+        }
+
         const chartPoints: ChartDataPoint[] = globalRatios.map((global, index) => {
           const topTrader = topTraderRatios[index];
           if (!topTrader) return null;
@@ -50,7 +63,7 @@ function App() {
           const bigUserRatio = parseFloat(topTrader.longShortRatio);
           const retail = calculateRetailRatio(totalRatio, bigUserRatio, bigUserProportion);
 
-          const kline = klineData ? klineData[index] : null;
+          const kline = klineData ? klineData[klineData.length - globalRatios.length + index] : null;
           const price = kline ? parseFloat(kline.close) : undefined;
 
           return {
@@ -64,7 +77,9 @@ function App() {
             totalShort: parseFloat(global.shortAccount) * 100,
             bigUserLong: parseFloat(topTrader.longAccount) * 100,
             bigUserShort: parseFloat(topTrader.shortAccount) * 100,
-            price
+            price,
+            ma120: ma120Values[index],
+            ma240: ma240Values[index]
           };
         }).filter(Boolean) as ChartDataPoint[];
 

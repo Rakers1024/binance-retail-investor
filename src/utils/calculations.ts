@@ -38,3 +38,21 @@ export function formatDate(timestamp: number): string {
     minute: '2-digit'
   });
 }
+
+export function calculateMA(prices: number[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+
+  for (let i = 0; i < prices.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else {
+      let sum = 0;
+      for (let j = 0; j < period; j++) {
+        sum += prices[i - j];
+      }
+      result.push(sum / period);
+    }
+  }
+
+  return result;
+}

@@ -25,8 +25,12 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
   const padding = range * 0.1;
 
   const prices = data.map(d => d.price).filter(p => p !== undefined) as number[];
-  const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+  const ma120Values = data.map(d => d.ma120).filter(p => p !== null && p !== undefined) as number[];
+  const ma240Values = data.map(d => d.ma240).filter(p => p !== null && p !== undefined) as number[];
+
+  const allPriceValues = [...prices, ...ma120Values, ...ma240Values];
+  const maxPrice = allPriceValues.length > 0 ? Math.max(...allPriceValues) : 0;
+  const minPrice = allPriceValues.length > 0 ? Math.min(...allPriceValues) : 0;
   const priceRange = maxPrice - minPrice;
   const pricePadding = priceRange * 0.1;
 
@@ -64,6 +68,23 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       const y = getPriceY(point.price);
       return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
     }).join(' ');
+  };
+
+  const createMAPath = (maKey: 'ma120' | 'ma240') => {
+    let path = '';
+    let started = false;
+
+    data.forEach((point, index) => {
+      const maValue = point[maKey];
+      if (maValue !== null && maValue !== undefined) {
+        const x = getX(index);
+        const y = getPriceY(maValue);
+        path += `${!started ? 'M' : 'L'} ${x} ${y} `;
+        started = true;
+      }
+    });
+
+    return path;
   };
 
   const handleMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
@@ -176,14 +197,30 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
         />
 
         {showPrice && prices.length > 0 && (
-          <path
-            d={createPricePath()}
-            fill="none"
-            stroke="#a78bfa"
-            strokeWidth="2"
-            strokeDasharray="5,5"
-            opacity="0.7"
-          />
+          <>
+            <path
+              d={createPricePath()}
+              fill="none"
+              stroke="#a78bfa"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+              opacity="0.7"
+            />
+            <path
+              d={createMAPath('ma120')}
+              fill="none"
+              stroke="#86efac"
+              strokeWidth="1.5"
+              opacity="0.8"
+            />
+            <path
+              d={createMAPath('ma240')}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="1.5"
+              opacity="0.8"
+            />
+          </>
         )}
 
         <path
@@ -227,14 +264,36 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
               strokeWidth="2"
             />
             {showPrice && data[hoveredPoint].price && (
-              <circle
-                cx={getX(hoveredPoint)}
-                cy={getPriceY(data[hoveredPoint].price!)}
-                r="4"
-                fill="#a78bfa"
-                stroke="white"
-                strokeWidth="2"
-              />
+              <>
+                <circle
+                  cx={getX(hoveredPoint)}
+                  cy={getPriceY(data[hoveredPoint].price!)}
+                  r="4"
+                  fill="#a78bfa"
+                  stroke="white"
+                  strokeWidth="2"
+                />
+                {data[hoveredPoint].ma120 && (
+                  <circle
+                    cx={getX(hoveredPoint)}
+                    cy={getPriceY(data[hoveredPoint].ma120!)}
+                    r="3"
+                    fill="#86efac"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                )}
+                {data[hoveredPoint].ma240 && (
+                  <circle
+                    cx={getX(hoveredPoint)}
+                    cy={getPriceY(data[hoveredPoint].ma240!)}
+                    r="3"
+                    fill="#22c55e"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                )}
+              </>
             )}
           </>
         )}
@@ -260,10 +319,20 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
           <span>大户</span>
         </div>
         {showPrice && (
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-0.5 bg-violet-400 opacity-70" style={{ borderTop: '2px dashed' }}></div>
-            <span>价格</span>
-          </div>
+          <>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-0.5 bg-violet-400 opacity-70" style={{ borderTop: '2px dashed' }}></div>
+              <span>价格</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-0.5 bg-green-300"></div>
+              <span>MA120</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-0.5 bg-green-600"></div>
+              <span>MA240</span>
+            </div>
+          </>
         )}
       </div>
 
@@ -347,10 +416,22 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
 
               {showPrice && data[hoveredPoint].price && (
                 <div className="bg-violet-900/30 rounded-lg p-2.5 border border-violet-700/50">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-violet-300 font-semibold text-xs">价格</span>
                     <span className="font-bold text-sm text-violet-200">${data[hoveredPoint].price!.toFixed(2)}</span>
                   </div>
+                  {data[hoveredPoint].ma120 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-300">MA120:</span>
+                      <span className="text-green-200 font-medium">${data[hoveredPoint].ma120!.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {data[hoveredPoint].ma240 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-400">MA240:</span>
+                      <span className="text-green-300 font-medium">${data[hoveredPoint].ma240!.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

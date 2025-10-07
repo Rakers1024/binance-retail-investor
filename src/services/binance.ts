@@ -46,34 +46,92 @@ export async function fetchTopTraderLongShortRatio(
 export async function fetchKlineData(
   symbol: string = 'BTCUSDT',
   interval: string = '5m',
-  limit: number = 30
+  limit: number = 1000
 ): Promise<KlineData[]> {
   const url = `${BINANCE_SPOT_API}/api/v3/klines`;
-  const params = new URLSearchParams({
-    symbol,
-    interval,
-    limit: limit.toString()
-  });
+  const maxLimit = 1000;
+  const allData: KlineData[] = [];
 
-  const response = await fetch(`${url}?${params}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch kline data: ${response.statusText}`);
+  if (limit <= maxLimit) {
+    const params = new URLSearchParams({
+      symbol,
+      interval,
+      limit: limit.toString()
+    });
+
+    const response = await fetch(`${url}?${params}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch kline data: ${response.statusText}`);
+    }
+
+    const rawData = await response.json();
+    return rawData.map((item: any[]) => ({
+      openTime: item[0],
+      open: item[1],
+      high: item[2],
+      low: item[3],
+      close: item[4],
+      volume: item[5],
+      closeTime: item[6],
+      quoteAssetVolume: item[7],
+      numberOfTrades: item[8],
+      takerBuyBaseAssetVolume: item[9],
+      takerBuyQuoteAssetVolume: item[10],
+      ignore: item[11]
+    }));
   }
 
-  const rawData = await response.json();
+  let remainingLimit = limit;
+  let endTime: number | undefined = undefined;
 
-  return rawData.map((item: any[]) => ({
-    openTime: item[0],
-    open: item[1],
-    high: item[2],
-    low: item[3],
-    close: item[4],
-    volume: item[5],
-    closeTime: item[6],
-    quoteAssetVolume: item[7],
-    numberOfTrades: item[8],
-    takerBuyBaseAssetVolume: item[9],
-    takerBuyQuoteAssetVolume: item[10],
-    ignore: item[11]
-  }));
+  while (remainingLimit > 0) {
+    const currentLimit = Math.min(remainingLimit, maxLimit);
+    const params = new URLSearchParams({
+      symbol,
+      interval,
+      limit: currentLimit.toString()
+    });
+
+    if (endTime) {
+      params.append('endTime', endTime.toString());
+    }
+
+    const response = await fetch(`${url}?${params}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch kline data: ${response.statusText}`);
+    }
+
+    const rawData = await response.json();
+
+    if (rawData.length === 0) break;
+
+    const mappedData = rawData.map((item: any[]) => ({
+      openTime: item[0],
+      open: item[1],
+      high: item[2],
+      low: item[3],
+      close: item[4],
+      volume: item[5],
+      closeTime: item[6],
+      quoteAssetVolume: item[7],
+      numberOfTrades: item[8],
+      takerBuyBaseAssetVolume: item[9],
+      takerBuyQuoteAssetVolume: item[10],
+      ignore: item[11]
+    }));
+
+    if (endTime) {
+      allData.unshift(...mappedData);
+    } else {
+      allData.push(...mappedData);
+    }
+
+    remainingLimit -= rawData.length;
+
+    if (rawData.length < maxLimit) break;
+
+    endTime = rawData[0][0] - 1;
+  }
+
+  return allData.slice(-limit);
 }

@@ -24,6 +24,8 @@ export interface ChartDataPoint {
   bigUserLong?: number;
   bigUserShort?: number;
   price?: number;
+  ma120?: number | null;
+  ma240?: number | null;
 }
 
 export interface KlineData {
