@@ -49,12 +49,12 @@ function App() {
 
         if (klineData && klineData.length > 0) {
           const allPrices = klineData.map((k: any) => parseFloat(k.close));
-          const allMA120 = calculateMA(allPrices, 120);
-          const allMA240 = calculateMA(allPrices, 240);
+          const allMA7 = calculateMA(allPrices, 7);
+          const allMA25 = calculateMA(allPrices, 25);
 
           const startIndex = klineData.length - globalRatios.length;
-          ma120Values = allMA120.slice(startIndex);
-          ma240Values = allMA240.slice(startIndex);
+          ma120Values = allMA7.slice(startIndex);
+          ma240Values = allMA25.slice(startIndex);
         }
 
         const chartPoints: ChartDataPoint[] = globalRatios.map((global, index) => {

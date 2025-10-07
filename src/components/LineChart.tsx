@@ -110,7 +110,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
 
       if (ma120.some(m => m !== null)) {
         series.push({
-          name: 'MA120',
+          name: 'MA7',
           type: 'line',
           data: ma120,
           yAxisIndex: 1,
@@ -125,7 +125,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
 
       if (ma240.some(m => m !== null)) {
         series.push({
-          name: 'MA240',
+          name: 'MA25',
           type: 'line',
           data: ma240,
           yAxisIndex: 1,
@@ -276,12 +276,12 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
               </div>
               ${point.ma120 ? `
               <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-                <span style="color: rgb(134, 239, 172);">MA120:</span>
+                <span style="color: rgb(134, 239, 172);">MA7:</span>
                 <span style="color: rgb(187, 247, 208); font-weight: 500;">$${point.ma120.toFixed(2)}</span>
               </div>` : ''}
               ${point.ma240 ? `
               <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                <span style="color: rgb(34, 197, 94);">MA240:</span>
+                <span style="color: rgb(34, 197, 94);">MA25:</span>
                 <span style="color: rgb(134, 239, 172); font-weight: 500;">$${point.ma240.toFixed(2)}</span>
               </div>` : ''}
             </div>`;
