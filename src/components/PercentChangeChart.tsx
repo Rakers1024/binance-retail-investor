@@ -192,31 +192,68 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
             <div style="font-weight: bold; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #374151; color: #e5e7eb;">
               ${formatDate(point.timestamp)}
             </div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">`;
+            <div style="display: flex; flex-direction: column; gap: 12px;">`;
 
-          params.forEach(param => {
-            let displayValue = param.value !== null ? param.value.toFixed(2) : 'N/A';
-            let unit = '%';
-
-            if (param.seriesName.includes('原始')) {
-              unit = '';
-              if (param.seriesName.includes('价格')) {
-                displayValue = param.value !== null ? `$${param.value.toFixed(2)}` : 'N/A';
-              }
-            }
-
-            tooltip += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
-              <span style="color: ${param.color};">●</span>
-              <span style="color: #d1d5db; flex: 1;">${param.seriesName}:</span>
-              <span style="color: ${param.color}; font-weight: bold;">${displayValue}${unit}</span>
-            </div>`;
-          });
-
-          tooltip += `</div>
-            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #374151; font-size: 11px; color: #9ca3af;">
-              原始值: 散户=${point.retailRatio.toFixed(3)}, 大户=${point.bigUserRatio.toFixed(3)}, 价格=$${point.price?.toFixed(2)}
+          tooltip += `<div style="background: rgba(59, 130, 246, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.5);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgb(147, 197, 253); font-weight: 600; font-size: 11px;">散户多空比</span>
+              <span style="color: rgb(191, 219, 254); font-weight: bold; font-size: 12px;">${point.retailRatio.toFixed(3)}</span>
             </div>
+            ${point.retailLong !== undefined ? `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80;"></div>
+                <span style="color: #d1d5db;">多头:</span>
+                <span style="color: #86efac; font-weight: 500;">${point.retailLong.toFixed(1)}%</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #f87171;"></div>
+                <span style="color: #d1d5db;">空头:</span>
+                <span style="color: #fca5a5; font-weight: 500;">${point.retailShort!.toFixed(1)}%</span>
+              </div>
+            </div>` : ''}
           </div>`;
+
+          tooltip += `<div style="background: rgba(245, 158, 11, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.5);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgb(252, 211, 77); font-weight: 600; font-size: 11px;">大户多空比</span>
+              <span style="color: rgb(253, 230, 138); font-weight: bold; font-size: 12px;">${point.bigUserRatio.toFixed(3)}</span>
+            </div>
+            ${point.bigUserLong !== undefined ? `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80;"></div>
+                <span style="color: #d1d5db;">多头:</span>
+                <span style="color: #86efac; font-weight: 500;">${point.bigUserLong.toFixed(1)}%</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #f87171;"></div>
+                <span style="color: #d1d5db;">空头:</span>
+                <span style="color: #fca5a5; font-weight: 500;">${point.bigUserShort!.toFixed(1)}%</span>
+              </div>
+            </div>` : ''}
+          </div>`;
+
+          if (point.price) {
+            tooltip += `<div style="background: rgba(167, 139, 250, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(167, 139, 250, 0.5);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: ${point.ma120 || point.ma240 ? '8px' : '0'};">
+                <span style="color: rgb(196, 181, 253); font-weight: 600; font-size: 11px;">价格</span>
+                <span style="color: rgb(221, 214, 254); font-weight: bold; font-size: 12px;">$${point.price.toFixed(2)}</span>
+              </div>
+              ${point.ma120 ? `
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                <span style="color: rgb(134, 239, 172);">MA7:</span>
+                <span style="color: rgb(187, 247, 208); font-weight: 500;">$${point.ma120.toFixed(2)}</span>
+              </div>` : ''}
+              ${point.ma240 ? `
+              <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                <span style="color: rgb(34, 197, 94);">MA25:</span>
+                <span style="color: rgb(134, 239, 172); font-weight: 500;">$${point.ma240.toFixed(2)}</span>
+              </div>` : ''}
+            </div>`;
+          }
+
+          tooltip += '</div></div>';
           return tooltip;
         }
       },
