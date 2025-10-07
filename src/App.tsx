@@ -239,11 +239,13 @@ function App() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             散户多空比走势图
           </h2>
-          <LineChart data={chartData} showPrice={showPrice} />
+          <div className="flex-1">
+            <LineChart data={chartData} showPrice={showPrice} />
+          </div>
         </div>
 
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
