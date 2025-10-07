@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import ReactECharts from 'echarts-for-react';
 import { ChartDataPoint } from '../types';
 import { formatTimestamp, formatDate } from '../utils/calculations';
 
@@ -8,8 +9,321 @@ interface LineChartProps {
 }
 
 export default function LineChart({ data, showPrice }: LineChartProps) {
-  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
-  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const option = useMemo(() => {
+    if (data.length === 0) {
+      return {};
+    }
+
+    const timestamps = data.map(d => formatTimestamp(d.timestamp));
+    const retailRatios = data.map(d => d.retailRatio);
+    const totalRatios = data.map(d => d.totalRatio);
+    const bigUserRatios = data.map(d => d.bigUserRatio);
+    const prices = data.map(d => d.price ?? null);
+    const ma120 = data.map(d => d.ma120 ?? null);
+    const ma240 = data.map(d => d.ma240 ?? null);
+
+    const series: any[] = [
+      {
+        name: '散户',
+        type: 'line',
+        data: retailRatios,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: 'rgb(59, 130, 246)',
+          width: 3
+        },
+        itemStyle: {
+          color: 'rgb(59, 130, 246)'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0,
+              color: 'rgba(59, 130, 246, 0.3)'
+            }, {
+              offset: 1,
+              color: 'rgba(59, 130, 246, 0)'
+            }]
+          }
+        }
+      },
+      {
+        name: '整体',
+        type: 'line',
+        data: totalRatios,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#10b981',
+          width: 2
+        },
+        itemStyle: {
+          color: '#10b981'
+        }
+      },
+      {
+        name: '大户',
+        type: 'line',
+        data: bigUserRatios,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#f59e0b',
+          width: 2
+        },
+        itemStyle: {
+          color: '#f59e0b'
+        }
+      }
+    ];
+
+    if (showPrice && prices.some(p => p !== null)) {
+      series.push({
+        name: '价格',
+        type: 'line',
+        data: prices,
+        yAxisIndex: 1,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#a78bfa',
+          width: 2,
+          type: 'dashed'
+        },
+        itemStyle: {
+          color: '#a78bfa'
+        }
+      });
+
+      if (ma120.some(m => m !== null)) {
+        series.push({
+          name: 'MA120',
+          type: 'line',
+          data: ma120,
+          yAxisIndex: 1,
+          smooth: false,
+          symbol: 'none',
+          lineStyle: {
+            color: '#86efac',
+            width: 1.5
+          }
+        });
+      }
+
+      if (ma240.some(m => m !== null)) {
+        series.push({
+          name: 'MA240',
+          type: 'line',
+          data: ma240,
+          yAxisIndex: 1,
+          smooth: false,
+          symbol: 'none',
+          lineStyle: {
+            color: '#22c55e',
+            width: 1.5
+          }
+        });
+      }
+    }
+
+    const yAxis: any[] = [
+      {
+        type: 'value',
+        name: '多空比',
+        position: 'left',
+        axisLabel: {
+          formatter: '{value}',
+          color: '#9ca3af'
+        },
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: '#e5e7eb'
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#e5e7eb',
+            opacity: 0.2
+          }
+        }
+      }
+    ];
+
+    if (showPrice && prices.some(p => p !== null)) {
+      yAxis.push({
+        type: 'value',
+        name: '价格',
+        position: 'right',
+        axisLabel: {
+          formatter: '${value}',
+          color: '#a78bfa'
+        },
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: '#a78bfa'
+          }
+        },
+        splitLine: {
+          show: false
+        }
+      });
+    }
+
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(17, 24, 39, 0.95)',
+        borderColor: '#374151',
+        borderWidth: 1,
+        textStyle: {
+          color: '#fff'
+        },
+        formatter: (params: any[]) => {
+          if (!params || params.length === 0) return '';
+
+          const dataIndex = params[0].dataIndex;
+          const point = data[dataIndex];
+
+          let tooltip = `<div style="padding: 8px;">
+            <div style="font-weight: bold; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #374151; color: #e5e7eb;">
+              ${formatDate(point.timestamp)}
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">`;
+
+          tooltip += `<div style="background: rgba(59, 130, 246, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.5);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgb(147, 197, 253); font-weight: 600; font-size: 11px;">散户多空比</span>
+              <span style="color: rgb(191, 219, 254); font-weight: bold; font-size: 12px;">${point.retailRatio.toFixed(3)}</span>
+            </div>
+            ${point.retailLong !== undefined ? `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80;"></div>
+                <span style="color: #d1d5db;">多头:</span>
+                <span style="color: #86efac; font-weight: 500;">${point.retailLong.toFixed(1)}%</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #f87171;"></div>
+                <span style="color: #d1d5db;">空头:</span>
+                <span style="color: #fca5a5; font-weight: 500;">${point.retailShort!.toFixed(1)}%</span>
+              </div>
+            </div>` : ''}
+          </div>`;
+
+          tooltip += `<div style="background: rgba(16, 185, 129, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.5);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgb(110, 231, 183); font-weight: 600; font-size: 11px;">整体多空比</span>
+              <span style="color: rgb(167, 243, 208); font-weight: bold; font-size: 12px;">${point.totalRatio.toFixed(3)}</span>
+            </div>
+            ${point.totalLong !== undefined ? `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80;"></div>
+                <span style="color: #d1d5db;">多头:</span>
+                <span style="color: #86efac; font-weight: 500;">${point.totalLong.toFixed(1)}%</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #f87171;"></div>
+                <span style="color: #d1d5db;">空头:</span>
+                <span style="color: #fca5a5; font-weight: 500;">${point.totalShort!.toFixed(1)}%</span>
+              </div>
+            </div>` : ''}
+          </div>`;
+
+          tooltip += `<div style="background: rgba(245, 158, 11, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.5);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgb(252, 211, 77); font-weight: 600; font-size: 11px;">大户多空比</span>
+              <span style="color: rgb(253, 230, 138); font-weight: bold; font-size: 12px;">${point.bigUserRatio.toFixed(3)}</span>
+            </div>
+            ${point.bigUserLong !== undefined ? `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80;"></div>
+                <span style="color: #d1d5db;">多头:</span>
+                <span style="color: #86efac; font-weight: 500;">${point.bigUserLong.toFixed(1)}%</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #f87171;"></div>
+                <span style="color: #d1d5db;">空头:</span>
+                <span style="color: #fca5a5; font-weight: 500;">${point.bigUserShort!.toFixed(1)}%</span>
+              </div>
+            </div>` : ''}
+          </div>`;
+
+          if (showPrice && point.price) {
+            tooltip += `<div style="background: rgba(167, 139, 250, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(167, 139, 250, 0.5);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: ${point.ma120 || point.ma240 ? '8px' : '0'};">
+                <span style="color: rgb(196, 181, 253); font-weight: 600; font-size: 11px;">价格</span>
+                <span style="color: rgb(221, 214, 254); font-weight: bold; font-size: 12px;">$${point.price.toFixed(2)}</span>
+              </div>
+              ${point.ma120 ? `
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                <span style="color: rgb(134, 239, 172);">MA120:</span>
+                <span style="color: rgb(187, 247, 208); font-weight: 500;">$${point.ma120.toFixed(2)}</span>
+              </div>` : ''}
+              ${point.ma240 ? `
+              <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                <span style="color: rgb(34, 197, 94);">MA240:</span>
+                <span style="color: rgb(134, 239, 172); font-weight: 500;">$${point.ma240.toFixed(2)}</span>
+              </div>` : ''}
+            </div>`;
+          }
+
+          tooltip += '</div></div>';
+          return tooltip;
+        }
+      },
+      legend: {
+        data: series.map(s => s.name),
+        top: 0,
+        right: 0,
+        textStyle: {
+          color: '#6b7280',
+          fontSize: 12
+        },
+        icon: 'line'
+      },
+      grid: {
+        left: '50',
+        right: showPrice ? '70' : '10',
+        top: '40',
+        bottom: '40',
+        containLabel: false
+      },
+      xAxis: {
+        type: 'category',
+        data: timestamps,
+        boundaryGap: false,
+        axisLabel: {
+          color: '#9ca3af',
+          fontSize: 11
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#e5e7eb'
+          }
+        }
+      },
+      yAxis: yAxis,
+      series: series
+    };
+  }, [data, showPrice]);
 
   if (data.length === 0) {
     return (
@@ -19,425 +333,13 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     );
   }
 
-  const maxRatio = Math.max(...data.map(d => Math.max(d.retailRatio, d.totalRatio, d.bigUserRatio)));
-  const minRatio = Math.min(...data.map(d => Math.min(d.retailRatio, d.totalRatio, d.bigUserRatio)));
-  const range = maxRatio - minRatio;
-  const padding = range * 0.1;
-
-  const prices = data.map(d => d.price).filter(p => p !== undefined) as number[];
-  const ma120Values = data.map(d => d.ma120).filter(p => p !== null && p !== undefined) as number[];
-  const ma240Values = data.map(d => d.ma240).filter(p => p !== null && p !== undefined) as number[];
-
-  const allPriceValues = [...prices, ...ma120Values, ...ma240Values];
-  const maxPrice = allPriceValues.length > 0 ? Math.max(...allPriceValues) : 0;
-  const minPrice = allPriceValues.length > 0 ? Math.min(...allPriceValues) : 0;
-  const priceRange = maxPrice - minPrice;
-  const pricePadding = priceRange * 0.1;
-
-  const chartHeight = 280;
-  const chartWidth = 1000;
-  const leftMargin = 40;
-  const rightMargin = showPrice ? 60 : 10;
-  const chartArea = chartWidth - leftMargin - rightMargin;
-
-  const getY = (value: number) => {
-    return chartHeight - ((value - (minRatio - padding)) / (range + padding * 2)) * chartHeight;
-  };
-
-  const getPriceY = (price: number) => {
-    if (priceRange === 0) return chartHeight / 2;
-    return chartHeight - ((price - (minPrice - pricePadding)) / (priceRange + pricePadding * 2)) * chartHeight;
-  };
-
-  const getX = (index: number) => {
-    return leftMargin + (index / (data.length - 1)) * chartArea;
-  };
-
-  const createPath = (dataKey: 'retailRatio' | 'totalRatio' | 'bigUserRatio') => {
-    return data.map((point, index) => {
-      const x = getX(index);
-      const y = getY(point[dataKey]);
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-    }).join(' ');
-  };
-
-  const createPricePath = () => {
-    return data.map((point, index) => {
-      if (!point.price) return '';
-      const x = getX(index);
-      const y = getPriceY(point.price);
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-    }).join(' ');
-  };
-
-  const createMAPath = (maKey: 'ma120' | 'ma240') => {
-    let path = '';
-    let started = false;
-
-    data.forEach((point, index) => {
-      const maValue = point[maKey];
-      if (maValue !== null && maValue !== undefined) {
-        const x = getX(index);
-        const y = getPriceY(maValue);
-        path += `${!started ? 'M' : 'L'} ${x} ${y} `;
-        started = true;
-      }
-    });
-
-    return path;
-  };
-
-  const handleMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
-    const svg = event.currentTarget;
-    const rect = svg.getBoundingClientRect();
-    const svgX = ((event.clientX - rect.left) / rect.width) * chartWidth;
-    const svgY = ((event.clientY - rect.top) / rect.height) * chartHeight;
-
-    if (svgX >= leftMargin && svgX <= chartWidth - rightMargin) {
-      const relativeX = svgX - leftMargin;
-      const pointIndex = Math.round((relativeX / chartArea) * (data.length - 1));
-
-      if (pointIndex >= 0 && pointIndex < data.length) {
-        setHoveredPoint(pointIndex);
-        setMousePosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
-      }
-    } else {
-      setHoveredPoint(null);
-      setMousePosition(null);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredPoint(null);
-    setMousePosition(null);
-  };
-
-  const gridLines = 5;
-  const yAxisValues = Array.from({ length: gridLines }, (_, i) => {
-    return minRatio - padding + ((range + padding * 2) / (gridLines - 1)) * i;
-  });
-
-  const priceAxisValues = showPrice && prices.length > 0 ? Array.from({ length: gridLines }, (_, i) => {
-    return minPrice - pricePadding + ((priceRange + pricePadding * 2) / (gridLines - 1)) * i;
-  }) : [];
-
   return (
-    <div className="relative w-full h-80">
-      <svg
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-        className="w-full h-full"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <defs>
-          <linearGradient id="retailGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {yAxisValues.map((value, i) => (
-          <g key={i}>
-            <line
-              x1={leftMargin}
-              y1={getY(value)}
-              x2={chartWidth - rightMargin}
-              y2={getY(value)}
-              stroke="#e5e7eb"
-              strokeWidth="0.2"
-            />
-            <text
-              x={leftMargin - 5}
-              y={getY(value)}
-              fontSize="12"
-              fill="#9ca3af"
-              textAnchor="end"
-              dominantBaseline="middle"
-            >
-              {value.toFixed(2)}
-            </text>
-          </g>
-        ))}
-
-        {showPrice && priceAxisValues.map((value, i) => (
-          <text
-            key={`price-${i}`}
-            x={chartWidth - rightMargin + 5}
-            y={getPriceY(value)}
-            fontSize="12"
-            fill="#a78bfa"
-            textAnchor="start"
-            dominantBaseline="middle"
-          >
-            ${value.toFixed(0)}
-          </text>
-        ))}
-
-        <path
-          d={createPath('totalRatio')}
-          fill="none"
-          stroke="#10b981"
-          strokeWidth="2"
-          opacity="0.5"
-        />
-
-        <path
-          d={createPath('bigUserRatio')}
-          fill="none"
-          stroke="#f59e0b"
-          strokeWidth="2"
-          opacity="0.5"
-        />
-
-        <path
-          d={createPath('retailRatio')}
-          fill="none"
-          stroke="rgb(59, 130, 246)"
-          strokeWidth="3"
-        />
-
-        {showPrice && prices.length > 0 && (
-          <>
-            <path
-              d={createPricePath()}
-              fill="none"
-              stroke="#a78bfa"
-              strokeWidth="2"
-              strokeDasharray="5,5"
-              opacity="0.7"
-            />
-            <path
-              d={createMAPath('ma120')}
-              fill="none"
-              stroke="#86efac"
-              strokeWidth="1.5"
-              opacity="0.8"
-            />
-            <path
-              d={createMAPath('ma240')}
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="1.5"
-              opacity="0.8"
-            />
-          </>
-        )}
-
-        <path
-          d={`${createPath('retailRatio')} L ${chartWidth - rightMargin} ${chartHeight} L ${leftMargin} ${chartHeight} Z`}
-          fill="url(#retailGradient)"
-        />
-
-        {hoveredPoint !== null && (
-          <>
-            <line
-              x1={getX(hoveredPoint)}
-              y1="0"
-              x2={getX(hoveredPoint)}
-              y2={chartHeight}
-              stroke="#94a3b8"
-              strokeWidth="1"
-              strokeDasharray="4,4"
-            />
-            <circle
-              cx={getX(hoveredPoint)}
-              cy={getY(data[hoveredPoint].retailRatio)}
-              r="5"
-              fill="rgb(59, 130, 246)"
-              stroke="white"
-              strokeWidth="2"
-            />
-            <circle
-              cx={getX(hoveredPoint)}
-              cy={getY(data[hoveredPoint].totalRatio)}
-              r="4"
-              fill="#10b981"
-              stroke="white"
-              strokeWidth="2"
-            />
-            <circle
-              cx={getX(hoveredPoint)}
-              cy={getY(data[hoveredPoint].bigUserRatio)}
-              r="4"
-              fill="#f59e0b"
-              stroke="white"
-              strokeWidth="2"
-            />
-            {showPrice && data[hoveredPoint].price && (
-              <>
-                <circle
-                  cx={getX(hoveredPoint)}
-                  cy={getPriceY(data[hoveredPoint].price!)}
-                  r="4"
-                  fill="#a78bfa"
-                  stroke="white"
-                  strokeWidth="2"
-                />
-                {data[hoveredPoint].ma120 && (
-                  <circle
-                    cx={getX(hoveredPoint)}
-                    cy={getPriceY(data[hoveredPoint].ma120!)}
-                    r="3"
-                    fill="#86efac"
-                    stroke="white"
-                    strokeWidth="2"
-                  />
-                )}
-                {data[hoveredPoint].ma240 && (
-                  <circle
-                    cx={getX(hoveredPoint)}
-                    cy={getPriceY(data[hoveredPoint].ma240!)}
-                    r="3"
-                    fill="#22c55e"
-                    stroke="white"
-                    strokeWidth="2"
-                  />
-                )}
-              </>
-            )}
-          </>
-        )}
-      </svg>
-
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-8 text-xs text-gray-500">
-        {[0, Math.floor(data.length / 2), data.length - 1].map(index => (
-          <span key={index}>{formatTimestamp(data[index].timestamp)}</span>
-        ))}
-      </div>
-
-      <div className="absolute top-0 right-0 flex gap-4 text-xs">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-0.5 bg-blue-500"></div>
-          <span>散户</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-0.5 bg-green-500 opacity-50"></div>
-          <span>整体</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-0.5 bg-amber-500 opacity-50"></div>
-          <span>大户</span>
-        </div>
-        {showPrice && (
-          <>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-0.5 bg-violet-400 opacity-70" style={{ borderTop: '2px dashed' }}></div>
-              <span>价格</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-0.5 bg-green-300"></div>
-              <span>MA120</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-0.5 bg-green-600"></div>
-              <span>MA240</span>
-            </div>
-          </>
-        )}
-      </div>
-
-      {hoveredPoint !== null && mousePosition && (
-        <div
-          className="absolute pointer-events-none z-10"
-          style={{
-            left: `${mousePosition.x + 15}px`,
-            top: `${mousePosition.y - 10}px`,
-            transform: mousePosition.x > window.innerWidth / 2 ? 'translateX(-100%) translateX(-30px)' : 'none'
-          }}
-        >
-          <div className="bg-gray-900 text-white rounded-lg shadow-2xl p-4 min-w-[280px] border border-gray-700">
-            <div className="font-bold mb-3 text-sm text-gray-200 pb-2 border-b border-gray-700">
-              {formatDate(data[hoveredPoint].timestamp)}
-            </div>
-
-            <div className="space-y-3">
-              <div className="bg-blue-900/30 rounded-lg p-2.5 border border-blue-700/50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-blue-300 font-semibold text-xs">散户多空比</span>
-                  <span className="font-bold text-sm text-blue-200">{data[hoveredPoint].retailRatio.toFixed(3)}</span>
-                </div>
-                {data[hoveredPoint].retailLong !== undefined && (
-                  <div className="flex justify-between text-xs mt-1.5 space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      <span className="text-gray-300">多头:</span>
-                      <span className="text-green-300 font-medium">{data[hoveredPoint].retailLong!.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                      <span className="text-gray-300">空头:</span>
-                      <span className="text-red-300 font-medium">{data[hoveredPoint].retailShort!.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-green-900/30 rounded-lg p-2.5 border border-green-700/50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-green-300 font-semibold text-xs">整体多空比</span>
-                  <span className="font-bold text-sm text-green-200">{data[hoveredPoint].totalRatio.toFixed(3)}</span>
-                </div>
-                {data[hoveredPoint].totalLong !== undefined && (
-                  <div className="flex justify-between text-xs mt-1.5 space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      <span className="text-gray-300">多头:</span>
-                      <span className="text-green-300 font-medium">{data[hoveredPoint].totalLong!.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                      <span className="text-gray-300">空头:</span>
-                      <span className="text-red-300 font-medium">{data[hoveredPoint].totalShort!.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-amber-900/30 rounded-lg p-2.5 border border-amber-700/50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-amber-300 font-semibold text-xs">大户多空比</span>
-                  <span className="font-bold text-sm text-amber-200">{data[hoveredPoint].bigUserRatio.toFixed(3)}</span>
-                </div>
-                {data[hoveredPoint].bigUserLong !== undefined && (
-                  <div className="flex justify-between text-xs mt-1.5 space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      <span className="text-gray-300">多头:</span>
-                      <span className="text-green-300 font-medium">{data[hoveredPoint].bigUserLong!.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                      <span className="text-gray-300">空头:</span>
-                      <span className="text-red-300 font-medium">{data[hoveredPoint].bigUserShort!.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {showPrice && data[hoveredPoint].price && (
-                <div className="bg-violet-900/30 rounded-lg p-2.5 border border-violet-700/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-violet-300 font-semibold text-xs">价格</span>
-                    <span className="font-bold text-sm text-violet-200">${data[hoveredPoint].price!.toFixed(2)}</span>
-                  </div>
-                  {data[hoveredPoint].ma120 && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-300">MA120:</span>
-                      <span className="text-green-200 font-medium">${data[hoveredPoint].ma120!.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {data[hoveredPoint].ma240 && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-400">MA240:</span>
-                      <span className="text-green-300 font-medium">${data[hoveredPoint].ma240!.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="w-full h-80">
+      <ReactECharts
+        option={option}
+        style={{ height: '100%', width: '100%' }}
+        opts={{ renderer: 'svg' }}
+      />
     </div>
   );
 }
