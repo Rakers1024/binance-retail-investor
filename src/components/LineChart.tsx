@@ -144,6 +144,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
         type: 'value',
         name: '多空比',
         position: 'left',
+        scale: true,
         axisLabel: {
           formatter: '{value}',
           color: '#9ca3af'
@@ -168,6 +169,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
         type: 'value',
         name: '价格',
         position: 'right',
+        scale: true,
         axisLabel: {
           formatter: '${value}',
           color: '#a78bfa'
