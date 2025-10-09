@@ -62,7 +62,7 @@ export function calculateMA(prices: number[], period: number): (number | null)[]
 export interface TrendZone {
   startIndex: number;
   endIndex: number;
-  type: 'bullish' | 'bearish';
+  type: 'bullish' | 'bearish' | 'neutral';
 }
 
 export function calculateSlope(values: number[], startIdx: number, endIdx: number): number {
@@ -88,7 +88,7 @@ export function detectTrendZones(
   }
 
   const zones: TrendZone[] = [];
-  let currentType: 'bullish' | 'bearish' | null = null;
+  let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
   let zoneStart: number | null = null;
 
   for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
@@ -97,22 +97,14 @@ export function detectTrendZones(
 
     const slopeProduct = retailSlope * priceSlope;
 
+    let newType: 'bullish' | 'bearish' | 'neutral';
+
     if (slopeProduct < 0) {
-      const newType: 'bullish' | 'bearish' = priceSlope > 0 ? 'bullish' : 'bearish';
-
-      if (currentType === null || currentType !== newType) {
-        if (zoneStart !== null && currentType !== null) {
-          zones.push({
-            startIndex: zoneStart,
-            endIndex: i - 1,
-            type: currentType
-          });
-        }
-
-        currentType = newType;
-        zoneStart = i - windowSize;
-      }
+      newType = priceSlope > 0 ? 'bullish' : 'bearish';
+    } else if (slopeProduct > 0) {
+      newType = 'neutral';
     } else {
+      // slopeProduct === 0, skip this point
       if (zoneStart !== null && currentType !== null) {
         zones.push({
           startIndex: zoneStart,
@@ -122,6 +114,20 @@ export function detectTrendZones(
       }
       currentType = null;
       zoneStart = null;
+      continue;
+    }
+
+    if (currentType === null || currentType !== newType) {
+      if (zoneStart !== null && currentType !== null) {
+        zones.push({
+          startIndex: zoneStart,
+          endIndex: i - 1,
+          type: currentType
+        });
+      }
+
+      currentType = newType;
+      zoneStart = i - windowSize;
     }
   }
 

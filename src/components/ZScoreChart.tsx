@@ -50,27 +50,35 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       2
     );
 
-    const markAreas = trendZones.map(zone => ([
-      {
-        xAxis: zone.startIndex,
-        itemStyle: {
-          color: zone.type === 'bullish'
-            ? 'rgba(34, 197, 94, 0.1)'
-            : 'rgba(239, 68, 68, 0.1)'
+    const markAreas = trendZones.map(zone => {
+      const colors = {
+        bullish: { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e', label: '涨行情' },
+        bearish: { bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444', label: '跌行情' },
+        neutral: { bg: 'rgba(156, 163, 175, 0.1)', text: '#9ca3af', label: '中性区间' }
+      };
+
+      const config = colors[zone.type];
+
+      return [
+        {
+          xAxis: zone.startIndex,
+          itemStyle: {
+            color: config.bg
+          }
+        },
+        {
+          xAxis: zone.endIndex,
+          label: {
+            show: true,
+            position: 'insideTop',
+            formatter: config.label,
+            color: config.text,
+            fontSize: 11,
+            fontWeight: 'bold'
+          }
         }
-      },
-      {
-        xAxis: zone.endIndex,
-        label: {
-          show: true,
-          position: 'insideTop',
-          formatter: zone.type === 'bullish' ? '涨行情' : '跌行情',
-          color: zone.type === 'bullish' ? '#22c55e' : '#ef4444',
-          fontSize: 11,
-          fontWeight: 'bold'
-        }
-      }
-    ]));
+      ];
+    });
 
     const series: any[] = [
       {
