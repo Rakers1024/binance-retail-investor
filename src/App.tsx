@@ -129,7 +129,7 @@ function App() {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 交易对
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT', 'DOGEUSDT', 'XRPUSDT'].map(s => (
                   <button
                     key={s}
@@ -138,7 +138,7 @@ function App() {
                       setCustomSymbol('');
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      symbol === s && customSymbol === ''
+                      symbol === s && !customSymbol
                         ? 'bg-blue-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
@@ -146,32 +146,22 @@ function App() {
                     {s.replace('USDT', '/USDT')}
                   </button>
                 ))}
-                <button
-                  onClick={() => {
-                    if (customSymbol) {
-                      setSymbol(customSymbol);
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    customSymbol !== '' && symbol === customSymbol
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  其他
-                </button>
-                <input
-                  type="text"
-                  value={customSymbol}
-                  onChange={(e) => setCustomSymbol(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && customSymbol) {
-                      setSymbol(customSymbol);
-                    }
-                  }}
-                  placeholder="输入交易对，如 LINKUSDT"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">或</span>
+                  <input
+                    type="text"
+                    value={customSymbol}
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase();
+                      setCustomSymbol(value);
+                      if (value) {
+                        setSymbol(value);
+                      }
+                    }}
+                    placeholder="输入其他交易对，如 LINKUSDT"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[240px]"
+                  />
+                </div>
               </div>
             </div>
 
