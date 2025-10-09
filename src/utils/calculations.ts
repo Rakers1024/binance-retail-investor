@@ -83,57 +83,29 @@ export function detectTrendZones(
   prices: number[],
   windowSize: number = 2
 ): TrendZone[] {
-  const dataLength = Math.min(retailRatios.length, prices.length);
-
-  if (dataLength < windowSize + 1) {
+  if (retailRatios.length < windowSize + 1 || prices.length < windowSize + 1) {
     return [];
   }
 
-  // 第一步：为每个数据点计算其趋势状态
-  const pointStates: ('bullish' | 'bearish' | 'neutral' | null)[] = new Array(dataLength).fill(null);
-
-  for (let i = windowSize; i < dataLength; i++) {
-    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
-    const priceSlope = calculateSlope(prices, i - windowSize, i);
-    const slopeProduct = retailSlope * priceSlope;
-
-    if (slopeProduct < 0) {
-      // 散户和价格反向运动
-      const state = priceSlope > 0 ? 'bullish' : 'bearish';
-      pointStates[i] = state;
-
-      // 将同一窗口内的所有点都标记为相同状态
-      for (let j = i - windowSize; j < i; j++) {
-        if (pointStates[j] === null) {
-          pointStates[j] = state;
-        }
-      }
-    } else if (slopeProduct > 0) {
-      // 散户和价格同向运动
-      const state = 'neutral';
-      pointStates[i] = state;
-
-      // 将同一窗口内的所有点都标记为相同状态
-      for (let j = i - windowSize; j < i; j++) {
-        if (pointStates[j] === null) {
-          pointStates[j] = state;
-        }
-      }
-    }
-    // slopeProduct === 0 时保持 null
-  }
-
-  // 第二步：识别连续相同状态的区间
   const zones: TrendZone[] = [];
   let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
   let zoneStart: number | null = null;
 
-  for (let i = 0; i < dataLength; i++) {
-    const state = pointStates[i];
+  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
+    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
+    const priceSlope = calculateSlope(prices, i - windowSize, i);
 
-    if (state === null) {
-      // 遇到无效点，结束当前区间
-      if (currentType !== null && zoneStart !== null) {
+    const slopeProduct = retailSlope * priceSlope;
+
+    let newType: 'bullish' | 'bearish' | 'neutral';
+
+    if (slopeProduct < 0) {
+      newType = priceSlope > 0 ? 'bullish' : 'bearish';
+    } else if (slopeProduct > 0) {
+      newType = 'neutral';
+    } else {
+      // slopeProduct === 0, skip this point
+      if (zoneStart !== null && currentType !== null) {
         zones.push({
           startIndex: zoneStart,
           endIndex: i - 1,
@@ -145,34 +117,27 @@ export function detectTrendZones(
       continue;
     }
 
-    if (currentType === null) {
-      // 开始新区间
-      currentType = state;
-      zoneStart = i;
-    } else if (currentType !== state) {
-      // 状态改变，结束当前区间，开始新区间
-      zones.push({
-        startIndex: zoneStart!,
-        endIndex: i - 1,
-        type: currentType
-      });
-      currentType = state;
-      zoneStart = i;
+    if (currentType === null || currentType !== newType) {
+      if (zoneStart !== null && currentType !== null) {
+        zones.push({
+          startIndex: zoneStart,
+          endIndex: i - 1,
+          type: currentType
+        });
+      }
+
+      currentType = newType;
+      zoneStart = i - windowSize;
     }
-    // 如果 state === currentType，继续当前区间
   }
 
-  // 处理最后一个区间
-  if (currentType !== null && zoneStart !== null) {
+  if (zoneStart !== null && currentType !== null) {
     zones.push({
       startIndex: zoneStart,
-      endIndex: dataLength - 1,
+      endIndex: Math.min(retailRatios.length, prices.length) - 1,
       type: currentType
     });
   }
-
-  // 第三步：可选的合并相邻同类区间（如果有需要的话）
-  // 这里已经保证了区间不重叠，因为我们是逐点处理的
 
   return zones;
 }
