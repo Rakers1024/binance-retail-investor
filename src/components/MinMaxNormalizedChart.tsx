@@ -295,7 +295,10 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
         boundaryGap: false,
         axisLabel: {
           color: '#9ca3af',
-          fontSize: 11
+          fontSize: 10,
+          interval: 0,
+          rotate: 0,
+          formatter: (value: string) => value
         },
         axisLine: {
           lineStyle: {
