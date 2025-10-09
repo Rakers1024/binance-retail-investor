@@ -39,7 +39,9 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
         itemStyle: {
           color: zone.type === 'bullish'
             ? 'rgba(34, 197, 94, 0.1)'
-            : 'rgba(239, 68, 68, 0.1)'
+            : zone.type === 'bearish'
+            ? 'rgba(239, 68, 68, 0.1)'
+            : 'rgba(156, 163, 175, 0.08)'
         }
       },
       {
@@ -47,8 +49,8 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
         label: {
           show: true,
           position: 'insideTop',
-          formatter: zone.type === 'bullish' ? '涨行情' : '跌行情',
-          color: zone.type === 'bullish' ? '#22c55e' : '#ef4444',
+          formatter: zone.type === 'bullish' ? '涨行情' : zone.type === 'bearish' ? '跌行情' : '中性',
+          color: zone.type === 'bullish' ? '#22c55e' : zone.type === 'bearish' ? '#ef4444' : '#9ca3af',
           fontSize: 11,
           fontWeight: 'bold'
         }
