@@ -91,24 +91,33 @@ export function detectTrendZones(
   let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
   let zoneStart: number | null = null;
 
-  for (let i = 0; i < Math.min(retailRatios.length, prices.length) - windowSize; i++) {
-    const retailSlope = calculateSlope(retailRatios, i, i + windowSize);
-    const priceSlope = calculateSlope(prices, i, i + windowSize);
+  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
+    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
+    const priceSlope = calculateSlope(prices, i - windowSize, i);
 
     const slopeProduct = retailSlope * priceSlope;
 
-    let newType: 'bullish' | 'bearish' | 'neutral' | null = null;
+    let newType: 'bullish' | 'bearish' | 'neutral';
 
     if (slopeProduct < 0) {
       newType = priceSlope > 0 ? 'bullish' : 'bearish';
     } else if (slopeProduct > 0) {
       newType = 'neutral';
+    } else {
+      // slopeProduct === 0, skip this point
+      if (zoneStart !== null && currentType !== null) {
+        zones.push({
+          startIndex: zoneStart,
+          endIndex: i - 1,
+          type: currentType
+        });
+      }
+      currentType = null;
+      zoneStart = null;
+      continue;
     }
-    // if slopeProduct === 0, newType remains null
 
-    // Type changed or became undefined
-    if (currentType !== newType) {
-      // Save the previous zone if it exists
+    if (currentType === null || currentType !== newType) {
       if (zoneStart !== null && currentType !== null) {
         zones.push({
           startIndex: zoneStart,
@@ -117,18 +126,11 @@ export function detectTrendZones(
         });
       }
 
-      // Start a new zone if newType is valid
-      if (newType !== null) {
-        currentType = newType;
-        zoneStart = i;
-      } else {
-        currentType = null;
-        zoneStart = null;
-      }
+      currentType = newType;
+      zoneStart = i - windowSize;
     }
   }
 
-  // Add the final zone if it exists
   if (zoneStart !== null && currentType !== null) {
     zones.push({
       startIndex: zoneStart,
