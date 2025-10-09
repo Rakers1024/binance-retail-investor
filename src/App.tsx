@@ -11,8 +11,7 @@ import { RatioData, ChartDataPoint } from './types';
 
 function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
-  const [inputSymbol, setInputSymbol] = useState('BTCUSDT');
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [customSymbol, setCustomSymbol] = useState('');
   const [period, setPeriod] = useState('5m');
   const [bigUserProportion, setBigUserProportion] = useState(0.2);
   const [showPrice, setShowPrice] = useState(true);
@@ -125,109 +124,125 @@ function App() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="flex flex-col gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 交易对
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={inputSymbol}
-                  onChange={(e) => setInputSymbol(e.target.value.toUpperCase())}
-                  onFocus={() => setShowDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setSymbol(inputSymbol);
-                      setShowDropdown(false);
+              <div className="flex flex-wrap gap-2">
+                {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT', 'DOGEUSDT', 'XRPUSDT'].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSymbol(s)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      symbol === s && customSymbol === ''
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {s.replace('USDT', '/USDT')}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    if (customSymbol) {
+                      setSymbol(customSymbol);
                     }
                   }}
-                  placeholder="输入交易对，如 BTCUSDT"
-                  className="w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {showDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ASTERUSDT', 'ADAUSDT', 'DOGEUSDT', 'XRPUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT', 'AVAXUSDT', 'ATOMUSDT', 'APTUSDT', 'ARBUSDT']
-                      .filter(s => s.includes(inputSymbol))
-                      .map(s => (
-                        <div
-                          key={s}
-                          onClick={() => {
-                            setInputSymbol(s);
-                            setSymbol(s);
-                            setShowDropdown(false);
-                          }}
-                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm"
-                        >
-                          {s.replace('USDT', '/USDT')}
-                        </div>
-                      ))
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    customSymbol && symbol === customSymbol
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  其他
+                </button>
+                <input
+                  type="text"
+                  value={customSymbol}
+                  onChange={(e) => setCustomSymbol(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && customSymbol) {
+                      setSymbol(customSymbol);
                     }
-                  </div>
-                )}
+                  }}
+                  placeholder="输入交易对，如 LINKUSDT"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
+                />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 时间周期
               </label>
-              <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="5m">5分钟</option>
-                <option value="15m">15分钟</option>
-                <option value="1h">1小时</option>
-                <option value="4h">4小时</option>
-                <option value="1d">1天</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                大户占比 ({(bigUserProportion * 100).toFixed(0)}%)
-              </label>
-              <input
-                type="range"
-                min="0.1"
-                max="0.5"
-                step="0.05"
-                value={bigUserProportion}
-                onChange={(e) => setBigUserProportion(parseFloat(e.target.value))}
-                className="w-40"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="showPrice"
-                checked={showPrice}
-                onChange={(e) => setShowPrice(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <label htmlFor="showPrice" className="text-sm font-medium text-gray-700">
-                显示价格曲线
-              </label>
-            </div>
-
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-            >
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-              刷新
-            </button>
-
-            {lastUpdate && (
-              <div className="text-sm text-gray-500 ml-auto">
-                最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: '5m', label: '5分钟' },
+                  { value: '15m', label: '15分钟' },
+                  { value: '1h', label: '1小时' },
+                  { value: '4h', label: '4小时' },
+                  { value: '1d', label: '1天' }
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setPeriod(option.value)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      period === option.value
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
+
+            <div className="flex flex-wrap gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  大户占比 ({(bigUserProportion * 100).toFixed(0)}%)
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="0.5"
+                  step="0.05"
+                  value={bigUserProportion}
+                  onChange={(e) => setBigUserProportion(parseFloat(e.target.value))}
+                  className="w-40"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="showPrice"
+                  checked={showPrice}
+                  onChange={(e) => setShowPrice(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <label htmlFor="showPrice" className="text-sm font-medium text-gray-700">
+                  显示价格曲线
+                </label>
+              </div>
+
+              <button
+                onClick={fetchData}
+                disabled={loading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+              >
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                刷新
+              </button>
+
+              {lastUpdate && (
+                <div className="text-sm text-gray-500 ml-auto">
+                  最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}
+                </div>
+              )}
+            </div>
           </div>
 
           {error && (
