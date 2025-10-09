@@ -97,27 +97,18 @@ export function detectTrendZones(
 
     const slopeProduct = retailSlope * priceSlope;
 
-    let newType: 'bullish' | 'bearish' | 'neutral';
+    let newType: 'bullish' | 'bearish' | 'neutral' | null = null;
 
     if (slopeProduct < 0) {
       newType = priceSlope > 0 ? 'bullish' : 'bearish';
     } else if (slopeProduct > 0) {
       newType = 'neutral';
-    } else {
-      // slopeProduct === 0, skip this point
-      if (zoneStart !== null && currentType !== null) {
-        zones.push({
-          startIndex: zoneStart,
-          endIndex: i - 1,
-          type: currentType
-        });
-      }
-      currentType = null;
-      zoneStart = null;
-      continue;
     }
+    // if slopeProduct === 0, newType remains null
 
-    if (currentType === null || currentType !== newType) {
+    // Type changed or became undefined
+    if (currentType !== newType) {
+      // Save the previous zone if it exists
       if (zoneStart !== null && currentType !== null) {
         zones.push({
           startIndex: zoneStart,
@@ -126,11 +117,18 @@ export function detectTrendZones(
         });
       }
 
-      currentType = newType;
-      zoneStart = i - windowSize;
+      // Start a new zone if newType is valid
+      if (newType !== null) {
+        currentType = newType;
+        zoneStart = i;
+      } else {
+        currentType = null;
+        zoneStart = null;
+      }
     }
   }
 
+  // Add the final zone if it exists
   if (zoneStart !== null && currentType !== null) {
     zones.push({
       startIndex: zoneStart,
