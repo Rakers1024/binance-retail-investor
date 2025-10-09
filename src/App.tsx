@@ -133,7 +133,10 @@ function App() {
                 {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT', 'DOGEUSDT', 'XRPUSDT'].map(s => (
                   <button
                     key={s}
-                    onClick={() => setSymbol(s)}
+                    onClick={() => {
+                      setSymbol(s);
+                      setCustomSymbol('');
+                    }}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       symbol === s && customSymbol === ''
                         ? 'bg-blue-600 text-white shadow-md'
@@ -150,7 +153,7 @@ function App() {
                     }
                   }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    customSymbol && symbol === customSymbol
+                    customSymbol !== '' && symbol === customSymbol
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
