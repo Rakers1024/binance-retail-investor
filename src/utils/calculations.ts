@@ -91,9 +91,9 @@ export function detectTrendZones(
   let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
   let zoneStart: number | null = null;
 
-  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
-    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
-    const priceSlope = calculateSlope(prices, i - windowSize, i);
+  for (let i = 0; i < Math.min(retailRatios.length, prices.length) - windowSize; i++) {
+    const retailSlope = calculateSlope(retailRatios, i, i + windowSize);
+    const priceSlope = calculateSlope(prices, i, i + windowSize);
 
     const slopeProduct = retailSlope * priceSlope;
 

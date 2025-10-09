@@ -49,7 +49,7 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
       const colors = {
         bullish: { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e', label: '涨行情' },
         bearish: { bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444', label: '跌行情' },
-        neutral: { bg: 'rgba(156, 163, 175, 0.1)', text: '#9ca3af', label: '中性区间' }
+        neutral: { bg: 'rgba(156, 163, 175, 0.1)', text: '#9ca3af', label: '中性' }
       };
 
       const config = colors[zone.type];
