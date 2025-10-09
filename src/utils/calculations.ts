@@ -58,3 +58,74 @@ export function calculateMA(prices: number[], period: number): (number | null)[]
 
   return result;
 }
+
+export interface TrendZone {
+  startIndex: number;
+  endIndex: number;
+  type: 'bullish' | 'bearish';
+}
+
+export function calculateSlope(values: number[], startIdx: number, endIdx: number): number {
+  if (startIdx >= endIdx || startIdx < 0 || endIdx >= values.length) {
+    return 0;
+  }
+
+  const x1 = startIdx;
+  const x2 = endIdx;
+  const y1 = values[startIdx];
+  const y2 = values[endIdx];
+
+  return (y2 - y1) / (x2 - x1);
+}
+
+export function detectTrendZones(
+  retailRatios: number[],
+  prices: number[],
+  windowSize: number = 2
+): TrendZone[] {
+  if (retailRatios.length < windowSize * 3 || prices.length < windowSize * 3) {
+    return [];
+  }
+
+  const zones: TrendZone[] = [];
+  let currentType: 'bullish' | 'bearish' | null = null;
+  let zoneStart: number | null = null;
+
+  for (let i = windowSize * 2; i < prices.length - windowSize; i++) {
+    const prevRetailSlope = calculateSlope(retailRatios, i - windowSize * 2, i - windowSize);
+    const currRetailSlope = calculateSlope(retailRatios, i - windowSize, i);
+
+    const prevPriceSlope = calculateSlope(prices, i - windowSize * 2, i - windowSize);
+    const currPriceSlope = calculateSlope(prices, i - windowSize, i);
+
+    if (
+      prevRetailSlope * currRetailSlope < 0 &&
+      prevPriceSlope * currPriceSlope < 0
+    ) {
+      const newType: 'bullish' | 'bearish' = currPriceSlope > 0 ? 'bullish' : 'bearish';
+
+      if (currentType !== newType) {
+        if (zoneStart !== null && currentType !== null) {
+          zones.push({
+            startIndex: zoneStart,
+            endIndex: i - 1,
+            type: currentType
+          });
+        }
+
+        currentType = newType;
+        zoneStart = i;
+      }
+    }
+  }
+
+  if (zoneStart !== null && currentType !== null) {
+    zones.push({
+      startIndex: zoneStart,
+      endIndex: prices.length - 1,
+      type: currentType
+    });
+  }
+
+  return zones;
+}

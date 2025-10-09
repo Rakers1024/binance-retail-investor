@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { ChartDataPoint } from '../types';
-import { formatTimestamp, formatDate } from '../utils/calculations';
+import { formatTimestamp, formatDate, detectTrendZones } from '../utils/calculations';
 
 interface PercentChangeChartProps {
   data: ChartDataPoint[];
@@ -26,6 +26,34 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
     const ma25Percent = data.map(d => d.ma240 ? ((d.ma240 - basePrice) / basePrice) * 100 : null);
 
     const prices = data.map(d => d.price ?? null);
+
+    const trendZones = detectTrendZones(
+      retailRatioPercent,
+      prices.filter(p => p !== null) as number[],
+      2
+    );
+
+    const markAreas = trendZones.map(zone => ([
+      {
+        xAxis: zone.startIndex,
+        itemStyle: {
+          color: zone.type === 'bullish'
+            ? 'rgba(34, 197, 94, 0.1)'
+            : 'rgba(239, 68, 68, 0.1)'
+        }
+      },
+      {
+        xAxis: zone.endIndex,
+        label: {
+          show: true,
+          position: 'insideTop',
+          formatter: zone.type === 'bullish' ? '涨行情' : '跌行情',
+          color: zone.type === 'bullish' ? '#22c55e' : '#ef4444',
+          fontSize: 11,
+          fontWeight: 'bold'
+        }
+      }
+    ]));
 
     const series: any[] = [
       {
@@ -58,7 +86,11 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
               color: 'rgba(59, 130, 246, 0)'
             }]
           }
-        }
+        },
+        markArea: markAreas.length > 0 ? {
+          silent: true,
+          data: markAreas
+        } : undefined
       },
       {
         name: '大户多空比变化%',
