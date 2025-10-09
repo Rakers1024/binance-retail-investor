@@ -99,10 +99,26 @@ export function detectTrendZones(
 
     if (slopeProduct < 0) {
       // 散户和价格反向运动
-      pointStates[i] = priceSlope > 0 ? 'bullish' : 'bearish';
+      const state = priceSlope > 0 ? 'bullish' : 'bearish';
+      pointStates[i] = state;
+
+      // 将同一窗口内的所有点都标记为相同状态
+      for (let j = i - windowSize; j < i; j++) {
+        if (pointStates[j] === null) {
+          pointStates[j] = state;
+        }
+      }
     } else if (slopeProduct > 0) {
       // 散户和价格同向运动
-      pointStates[i] = 'neutral';
+      const state = 'neutral';
+      pointStates[i] = state;
+
+      // 将同一窗口内的所有点都标记为相同状态
+      for (let j = i - windowSize; j < i; j++) {
+        if (pointStates[j] === null) {
+          pointStates[j] = state;
+        }
+      }
     }
     // slopeProduct === 0 时保持 null
   }
