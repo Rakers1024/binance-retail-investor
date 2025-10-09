@@ -83,7 +83,7 @@ export function detectTrendZones(
   prices: number[],
   windowSize: number = 2
 ): TrendZone[] {
-  if (retailRatios.length < windowSize * 3 || prices.length < windowSize * 3) {
+  if (retailRatios.length < windowSize + 1 || prices.length < windowSize + 1) {
     return [];
   }
 
@@ -91,20 +91,16 @@ export function detectTrendZones(
   let currentType: 'bullish' | 'bearish' | null = null;
   let zoneStart: number | null = null;
 
-  for (let i = windowSize * 2; i < prices.length - windowSize; i++) {
-    const prevRetailSlope = calculateSlope(retailRatios, i - windowSize * 2, i - windowSize);
-    const currRetailSlope = calculateSlope(retailRatios, i - windowSize, i);
+  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
+    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
+    const priceSlope = calculateSlope(prices, i - windowSize, i);
 
-    const prevPriceSlope = calculateSlope(prices, i - windowSize * 2, i - windowSize);
-    const currPriceSlope = calculateSlope(prices, i - windowSize, i);
+    const slopeProduct = retailSlope * priceSlope;
 
-    if (
-      prevRetailSlope * currRetailSlope < 0 &&
-      prevPriceSlope * currPriceSlope < 0
-    ) {
-      const newType: 'bullish' | 'bearish' = currPriceSlope > 0 ? 'bullish' : 'bearish';
+    if (slopeProduct < 0) {
+      const newType: 'bullish' | 'bearish' = priceSlope > 0 ? 'bullish' : 'bearish';
 
-      if (currentType !== newType) {
+      if (currentType === null || currentType !== newType) {
         if (zoneStart !== null && currentType !== null) {
           zones.push({
             startIndex: zoneStart,
@@ -114,15 +110,25 @@ export function detectTrendZones(
         }
 
         currentType = newType;
-        zoneStart = i;
+        zoneStart = i - windowSize;
       }
+    } else {
+      if (zoneStart !== null && currentType !== null) {
+        zones.push({
+          startIndex: zoneStart,
+          endIndex: i - 1,
+          type: currentType
+        });
+      }
+      currentType = null;
+      zoneStart = null;
     }
   }
 
   if (zoneStart !== null && currentType !== null) {
     zones.push({
       startIndex: zoneStart,
-      endIndex: prices.length - 1,
+      endIndex: Math.min(retailRatios.length, prices.length) - 1,
       type: currentType
     });
   }
