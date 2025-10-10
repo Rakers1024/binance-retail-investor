@@ -77,6 +77,10 @@ export function detectTrendZones(
   const dataLength = retailRatios.length;
   const pointClassifications: (('bullish' | 'bearish' | 'neutral') | null)[] = [];
 
+  let bullishCount = 0;
+  let bearishCount = 0;
+  let neutralCount = 0;
+
   for (let i = 0; i < dataLength; i++) {
     if (i === dataLength - 1) {
       if (i > 0 && pointClassifications[i - 1] !== null) {
@@ -103,10 +107,24 @@ export function detectTrendZones(
 
     if (slopeProduct < 0) {
       pointClassifications[i] = priceSlope > 0 ? 'bullish' : 'bearish';
+      if (priceSlope > 0) {
+        bullishCount++;
+      } else {
+        bearishCount++;
+      }
     } else {
       pointClassifications[i] = 'neutral';
+      neutralCount++;
     }
   }
+
+  console.log('detectTrendZones - Point classifications:', {
+    total: dataLength,
+    bullish: bullishCount,
+    bearish: bearishCount,
+    neutral: neutralCount,
+    nullCount: dataLength - bullishCount - bearishCount - neutralCount
+  });
 
   const zones: TrendZone[] = [];
   let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
@@ -152,8 +170,19 @@ export function detectTrendZones(
     });
   }
 
-  return zones.filter(zone => {
+  console.log('detectTrendZones - Before filter, total zones:', zones.length);
+  console.log('detectTrendZones - Zones by type:', {
+    bullish: zones.filter(z => z.type === 'bullish').length,
+    bearish: zones.filter(z => z.type === 'bearish').length,
+    neutral: zones.filter(z => z.type === 'neutral').length
+  });
+
+  const filteredZones = zones.filter(zone => {
     const zoneWidth = zone.endIndex - zone.startIndex + 1;
     return zoneWidth >= minZoneWidth;
   });
+
+  console.log('detectTrendZones - After filter, total zones:', filteredZones.length);
+
+  return filteredZones;
 }

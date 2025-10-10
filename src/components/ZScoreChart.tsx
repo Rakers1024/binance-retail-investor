@@ -49,6 +49,10 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       pricesOriginal
     );
 
+    console.log('ZScore Chart - Total zones:', trendZones.length);
+    console.log('ZScore Chart - Zones:', trendZones);
+    console.log('ZScore Chart - Data length:', data.length);
+
     const markAreas = trendZones
       .filter(zone => zone.type !== 'neutral')
       .map(zone => ([
