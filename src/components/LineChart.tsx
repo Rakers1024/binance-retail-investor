@@ -324,14 +324,19 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
         }
       },
       legend: {
-        data: series.map(s => s.name),
+        data: series.map(s => ({
+          name: s.name,
+          icon: 'rect',
+          itemStyle: {
+            color: s.lineStyle?.color || s.itemStyle?.color
+          }
+        })),
         top: 10,
         left: 'center',
         textStyle: {
           color: '#6b7280',
           fontSize: 12
         },
-        icon: 'rect',
         itemWidth: 20,
         itemHeight: 3,
         itemGap: 15
