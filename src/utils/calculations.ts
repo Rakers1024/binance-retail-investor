@@ -68,15 +68,25 @@ export interface TrendZone {
 export function detectTrendZones(
   retailRatios: (number | null)[],
   prices: (number | null)[],
-  minZoneWidth: number = 2
+  minZoneWidth: number = 1
 ): TrendZone[] {
   if (retailRatios.length < 2 || prices.length < 2 || retailRatios.length !== prices.length) {
     return [];
   }
 
-  const pointClassifications: (('bullish' | 'bearish' | 'neutral') | null)[] = new Array(retailRatios.length).fill(null);
+  const dataLength = retailRatios.length;
+  const pointClassifications: (('bullish' | 'bearish' | 'neutral') | null)[] = [];
 
-  for (let i = 0; i < retailRatios.length - 1; i++) {
+  for (let i = 0; i < dataLength; i++) {
+    if (i === dataLength - 1) {
+      if (i > 0 && pointClassifications[i - 1] !== null) {
+        pointClassifications[i] = pointClassifications[i - 1];
+      } else {
+        pointClassifications[i] = null;
+      }
+      continue;
+    }
+
     const currentRetail = retailRatios[i];
     const nextRetail = retailRatios[i + 1];
     const currentPrice = prices[i];
@@ -96,10 +106,6 @@ export function detectTrendZones(
     } else {
       pointClassifications[i] = 'neutral';
     }
-  }
-
-  if (pointClassifications.length > 0 && pointClassifications[pointClassifications.length - 2] !== null) {
-    pointClassifications[pointClassifications.length - 1] = pointClassifications[pointClassifications.length - 2];
   }
 
   const zones: TrendZone[] = [];
