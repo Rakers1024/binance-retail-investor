@@ -78,27 +78,29 @@ export function detectTrendZones(
   const pointClassifications: (('bullish' | 'bearish' | 'neutral') | null)[] = [];
 
   for (let i = 0; i < dataLength; i++) {
-    if (i === dataLength - 1) {
-      if (i > 0 && pointClassifications[i - 1] !== null) {
-        pointClassifications[i] = pointClassifications[i - 1];
-      } else {
-        pointClassifications[i] = null;
-      }
-      continue;
-    }
-
     const currentRetail = retailRatios[i];
-    const nextRetail = retailRatios[i + 1];
     const currentPrice = prices[i];
-    const nextPrice = prices[i + 1];
 
-    if (currentRetail === null || nextRetail === null || currentPrice === null || nextPrice === null) {
+    if (currentRetail === null || currentPrice === null) {
       pointClassifications[i] = null;
       continue;
     }
 
-    const retailSlope = nextRetail - currentRetail;
-    const priceSlope = nextPrice - currentPrice;
+    if (i === 0) {
+      pointClassifications[i] = 'neutral';
+      continue;
+    }
+
+    const prevRetail = retailRatios[i - 1];
+    const prevPrice = prices[i - 1];
+
+    if (prevRetail === null || prevPrice === null) {
+      pointClassifications[i] = null;
+      continue;
+    }
+
+    const retailSlope = currentRetail - prevRetail;
+    const priceSlope = currentPrice - prevPrice;
     const slopeProduct = retailSlope * priceSlope;
 
     if (slopeProduct < 0) {
