@@ -12,7 +12,7 @@ import { RatioData, ChartDataPoint } from './types';
 function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [customSymbol, setCustomSymbol] = useState('');
-  const [period, setPeriod] = useState('5m');
+  const [period, setPeriod] = useState('1h');
   const [bigUserProportion, setBigUserProportion] = useState(0.2);
   const [showPrice, setShowPrice] = useState(true);
   const [loading, setLoading] = useState(false);

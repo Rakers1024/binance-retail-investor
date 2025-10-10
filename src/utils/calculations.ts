@@ -62,7 +62,7 @@ export function calculateMA(prices: number[], period: number): (number | null)[]
 export interface TrendZone {
   startIndex: number;
   endIndex: number;
-  type: 'bullish' | 'bearish';
+  type: 'bullish' | 'bearish' | 'neutral';
 }
 
 export function calculateSlope(values: number[], startIdx: number, endIdx: number): number {
@@ -78,60 +78,77 @@ export function calculateSlope(values: number[], startIdx: number, endIdx: numbe
   return (y2 - y1) / (x2 - x1);
 }
 
+/**
+ * 合并相邻的同类型区间
+ */
+function mergeAdjacentZones(zones: TrendZone[]): TrendZone[] {
+  if (zones.length <= 1) return zones;
+
+  const merged: TrendZone[] = [];
+  let current = zones[0];
+
+  for (let i = 1; i < zones.length; i++) {
+    const next = zones[i];
+    
+    // 如果相邻区间类型相同且连续，则合并
+    if (current.type === next.type && current.endIndex + 1 >= next.startIndex) {
+      current = {
+        startIndex: current.startIndex,
+        endIndex: Math.max(current.endIndex, next.endIndex),
+        type: current.type
+      };
+    } else {
+      merged.push(current);
+      current = next;
+    }
+  }
+  
+  merged.push(current);
+  return merged;
+}
+
 export function detectTrendZones(
   retailRatios: number[],
   prices: number[],
-  windowSize: number = 2
+  windowSize: number = 1
 ): TrendZone[] {
-  if (retailRatios.length < windowSize + 1 || prices.length < windowSize + 1) {
+  const minLength = Math.min(retailRatios.length, prices.length);
+  if (minLength < 2) {
     return [];
   }
 
-  const zones: TrendZone[] = [];
-  let currentType: 'bullish' | 'bearish' | null = null;
-  let zoneStart: number | null = null;
+  const pointZones: TrendZone[] = [];
 
-  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
-    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
-    const priceSlope = calculateSlope(prices, i - windowSize, i);
+  // 按时间顺序，依次取两个时间点位数据计算斜率
+  for (let i = 1; i < minLength; i++) {
+    const retailSlope = calculateSlope(retailRatios, i - 1, i);
+    const priceSlope = calculateSlope(prices, i - 1, i);
 
     const slopeProduct = retailSlope * priceSlope;
 
+    let zoneType: 'bullish' | 'bearish' | 'neutral';
+
     if (slopeProduct < 0) {
-      const newType: 'bullish' | 'bearish' = priceSlope > 0 ? 'bullish' : 'bearish';
-
-      if (currentType === null || currentType !== newType) {
-        if (zoneStart !== null && currentType !== null) {
-          zones.push({
-            startIndex: zoneStart,
-            endIndex: i - 1,
-            type: currentType
-          });
-        }
-
-        currentType = newType;
-        zoneStart = i - windowSize;
+      // 散户多空比斜率 × 价格曲线斜率 < 0
+      if (priceSlope > 0) {
+        zoneType = 'bullish';  // 涨行情
+      } else {
+        zoneType = 'bearish'; // 跌行情
       }
     } else {
-      if (zoneStart !== null && currentType !== null) {
-        zones.push({
-          startIndex: zoneStart,
-          endIndex: i - 1,
-          type: currentType
-        });
-      }
-      currentType = null;
-      zoneStart = null;
+      // 散户多空比斜率 × 价格曲线斜率 >= 0 (包括 > 0 和 = 0 的情况)
+      zoneType = 'neutral'; // 中性区间
     }
-  }
 
-  if (zoneStart !== null && currentType !== null) {
-    zones.push({
-      startIndex: zoneStart,
-      endIndex: Math.min(retailRatios.length, prices.length) - 1,
-      type: currentType
+    pointZones.push({
+      startIndex: i - 1,
+      endIndex: i,
+      type: zoneType
     });
   }
 
-  return zones;
+  // 合并相邻的同类型区间
+  const mergedZones = mergeAdjacentZones(pointZones);
+
+  return mergedZones;
 }

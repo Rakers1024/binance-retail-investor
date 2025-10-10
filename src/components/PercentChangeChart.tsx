@@ -30,7 +30,7 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
     const trendZones = detectTrendZones(
       retailRatioPercent,
       prices.filter(p => p !== null) as number[],
-      2
+      1
     );
 
     const markAreas = trendZones.map(zone => ([
@@ -38,17 +38,19 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
         xAxis: zone.startIndex,
         itemStyle: {
           color: zone.type === 'bullish'
-            ? 'rgba(34, 197, 94, 0.1)'
-            : 'rgba(239, 68, 68, 0.1)'
+            ? 'rgba(34, 197, 94, 0.15)'
+            : zone.type === 'bearish'
+            ? 'rgba(239, 68, 68, 0.15)'
+            : 'rgba(156, 163, 175, 0.08)'
         }
       },
       {
         xAxis: zone.endIndex,
         label: {
-          show: true,
+          show: zone.type !== 'neutral',
           position: 'insideTop',
-          formatter: zone.type === 'bullish' ? '涨行情' : '跌行情',
-          color: zone.type === 'bullish' ? '#22c55e' : '#ef4444',
+          formatter: zone.type === 'bullish' ? '涨行情' : zone.type === 'bearish' ? '跌行情' : '',
+          color: zone.type === 'bullish' ? '#22c55e' : zone.type === 'bearish' ? '#ef4444' : '#9ca3af',
           fontSize: 11,
           fontWeight: 'bold'
         }
