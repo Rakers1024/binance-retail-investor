@@ -28,12 +28,19 @@ function App() {
     setError(null);
 
     try {
-      const [globalRatios, topTraderRatios] = await Promise.all([
+      const promises = [
         fetchGlobalLongShortRatio(symbol, period, 30),
         fetchTopTraderLongShortRatio(symbol, period, 30)
-      ]);
+      ];
 
-      const klineData = showPrice ? await fetchKlineData(symbol, period, 1000) : null;
+      if (showPrice) {
+        promises.push(fetchKlineData(symbol, period, 1000));
+      }
+
+      const results = await Promise.all(promises);
+      const globalRatios = results[0] as any[];
+      const topTraderRatios = results[1] as any[];
+      const klineData = showPrice && results[2] ? results[2] as any[] : null;
 
       if (globalRatios.length > 0 && topTraderRatios.length > 0) {
         setGlobalData(globalRatios[globalRatios.length - 1]);

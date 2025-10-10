@@ -62,63 +62,58 @@ export function calculateMA(prices: number[], period: number): (number | null)[]
 export interface TrendZone {
   startIndex: number;
   endIndex: number;
-  type: 'bullish' | 'bearish' | 'neutral';
+  type: 'bullish' | 'bearish';
+}
+
+export function calculateSlope(values: number[], startIdx: number, endIdx: number): number {
+  if (startIdx >= endIdx || startIdx < 0 || endIdx >= values.length) {
+    return 0;
+  }
+
+  const x1 = startIdx;
+  const x2 = endIdx;
+  const y1 = values[startIdx];
+  const y2 = values[endIdx];
+
+  return (y2 - y1) / (x2 - x1);
 }
 
 export function detectTrendZones(
-  retailRatios: (number | null)[],
-  prices: (number | null)[],
-  minZoneWidth: number = 1
+  retailRatios: number[],
+  prices: number[],
+  windowSize: number = 2
 ): TrendZone[] {
-  if (retailRatios.length < 2 || prices.length < 2 || retailRatios.length !== prices.length) {
+  if (retailRatios.length < windowSize + 1 || prices.length < windowSize + 1) {
     return [];
   }
 
-  const dataLength = retailRatios.length;
-  const pointClassifications: (('bullish' | 'bearish' | 'neutral') | null)[] = [];
+  const zones: TrendZone[] = [];
+  let currentType: 'bullish' | 'bearish' | null = null;
+  let zoneStart: number | null = null;
 
-  for (let i = 0; i < dataLength; i++) {
-    const currentRetail = retailRatios[i];
-    const currentPrice = prices[i];
+  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
+    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
+    const priceSlope = calculateSlope(prices, i - windowSize, i);
 
-    if (currentRetail === null || currentPrice === null) {
-      pointClassifications[i] = null;
-      continue;
-    }
-
-    if (i === 0) {
-      pointClassifications[i] = 'neutral';
-      continue;
-    }
-
-    const prevRetail = retailRatios[i - 1];
-    const prevPrice = prices[i - 1];
-
-    if (prevRetail === null || prevPrice === null) {
-      pointClassifications[i] = null;
-      continue;
-    }
-
-    const retailSlope = currentRetail - prevRetail;
-    const priceSlope = currentPrice - prevPrice;
     const slopeProduct = retailSlope * priceSlope;
 
     if (slopeProduct < 0) {
-      pointClassifications[i] = priceSlope > 0 ? 'bullish' : 'bearish';
+      const newType: 'bullish' | 'bearish' = priceSlope > 0 ? 'bullish' : 'bearish';
+
+      if (currentType === null || currentType !== newType) {
+        if (zoneStart !== null && currentType !== null) {
+          zones.push({
+            startIndex: zoneStart,
+            endIndex: i - 1,
+            type: currentType
+          });
+        }
+
+        currentType = newType;
+        zoneStart = i - windowSize;
+      }
     } else {
-      pointClassifications[i] = 'neutral';
-    }
-  }
-
-  const zones: TrendZone[] = [];
-  let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
-  let zoneStart: number | null = null;
-
-  for (let i = 0; i < pointClassifications.length; i++) {
-    const classification = pointClassifications[i];
-
-    if (classification === null) {
-      if (currentType !== null && zoneStart !== null) {
+      if (zoneStart !== null && currentType !== null) {
         zones.push({
           startIndex: zoneStart,
           endIndex: i - 1,
@@ -127,35 +122,16 @@ export function detectTrendZones(
       }
       currentType = null;
       zoneStart = null;
-      continue;
-    }
-
-    if (currentType === null) {
-      currentType = classification;
-      zoneStart = i;
-    } else if (classification !== currentType) {
-      if (zoneStart !== null) {
-        zones.push({
-          startIndex: zoneStart,
-          endIndex: i - 1,
-          type: currentType
-        });
-      }
-      currentType = classification;
-      zoneStart = i;
     }
   }
 
-  if (currentType !== null && zoneStart !== null) {
+  if (zoneStart !== null && currentType !== null) {
     zones.push({
       startIndex: zoneStart,
-      endIndex: pointClassifications.length - 1,
+      endIndex: Math.min(retailRatios.length, prices.length) - 1,
       type: currentType
     });
   }
 
-  return zones.filter(zone => {
-    const zoneWidth = zone.endIndex - zone.startIndex + 1;
-    return zoneWidth >= minZoneWidth;
-  });
+  return zones;
 }
