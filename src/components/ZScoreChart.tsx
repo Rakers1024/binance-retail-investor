@@ -50,29 +50,41 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       1
     );
 
-    const markAreas = trendZones.map(zone => ([
-      {
-        xAxis: zone.startIndex,
-        itemStyle: {
-          color: zone.type === 'bullish'
-            ? 'rgba(34, 197, 94, 0.15)'
-            : zone.type === 'bearish'
-            ? 'rgba(239, 68, 68, 0.15)'
-            : 'rgba(156, 163, 175, 0.08)'
+    const markAreas = trendZones.map((zone, index) => {
+      const isLastZone = index === trendZones.length - 1;
+
+      return [
+        {
+          xAxis: zone.startIndex,
+          itemStyle: {
+            color: isLastZone
+              ? zone.type === 'bullish'
+                ? 'rgba(59, 130, 246, 0.25)'
+                : zone.type === 'bearish'
+                ? 'rgba(59, 130, 246, 0.25)'
+                : 'rgba(59, 130, 246, 0.15)'
+              : zone.type === 'bullish'
+              ? 'rgba(34, 197, 94, 0.15)'
+              : zone.type === 'bearish'
+              ? 'rgba(239, 68, 68, 0.15)'
+              : 'rgba(156, 163, 175, 0.08)'
+          }
+        },
+        {
+          xAxis: zone.endIndex,
+          label: {
+            show: zone.type !== 'neutral',
+            position: 'insideTop',
+            formatter: zone.type === 'bullish' ? '涨行情' : zone.type === 'bearish' ? '跌行情' : '',
+            color: isLastZone
+              ? '#3b82f6'
+              : zone.type === 'bullish' ? '#22c55e' : zone.type === 'bearish' ? '#ef4444' : '#9ca3af',
+            fontSize: 11,
+            fontWeight: 'bold'
+          }
         }
-      },
-      {
-        xAxis: zone.endIndex,
-        label: {
-          show: zone.type !== 'neutral',
-          position: 'insideTop',
-          formatter: zone.type === 'bullish' ? '涨行情' : zone.type === 'bearish' ? '跌行情' : '',
-          color: zone.type === 'bullish' ? '#22c55e' : zone.type === 'bearish' ? '#ef4444' : '#9ca3af',
-          fontSize: 11,
-          fontWeight: 'bold'
-        }
-      }
-    ]));
+      ];
+    });
 
     const series: any[] = [
       {
