@@ -23,7 +23,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     const ma240 = data.map(d => d.ma240 ?? null);
 
     const trendZones = showPrice && prices.some(p => p !== null)
-      ? detectTrendZones(retailRatios, prices.filter(p => p !== null) as number[])
+      ? detectTrendZones(retailRatios, prices)
       : [];
 
     const markAreas = trendZones

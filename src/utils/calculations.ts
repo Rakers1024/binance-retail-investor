@@ -66,20 +66,29 @@ export interface TrendZone {
 }
 
 export function detectTrendZones(
-  retailRatios: number[],
-  prices: number[]
+  retailRatios: (number | null)[],
+  prices: (number | null)[],
+  minZoneWidth: number = 2
 ): TrendZone[] {
-  if (retailRatios.length < 2 || prices.length < 2) {
+  if (retailRatios.length < 2 || prices.length < 2 || retailRatios.length !== prices.length) {
     return [];
   }
 
-  const minLength = Math.min(retailRatios.length, prices.length);
-  const pointClassifications: ('bullish' | 'bearish' | 'neutral')[] = [];
+  const pointClassifications: (('bullish' | 'bearish' | 'neutral') | null)[] = new Array(retailRatios.length).fill(null);
 
-  for (let i = 0; i < minLength - 1; i++) {
-    const retailSlope = retailRatios[i + 1] - retailRatios[i];
-    const priceSlope = prices[i + 1] - prices[i];
+  for (let i = 0; i < retailRatios.length - 1; i++) {
+    const currentRetail = retailRatios[i];
+    const nextRetail = retailRatios[i + 1];
+    const currentPrice = prices[i];
+    const nextPrice = prices[i + 1];
 
+    if (currentRetail === null || nextRetail === null || currentPrice === null || nextPrice === null) {
+      pointClassifications[i] = null;
+      continue;
+    }
+
+    const retailSlope = nextRetail - currentRetail;
+    const priceSlope = nextPrice - currentPrice;
     const slopeProduct = retailSlope * priceSlope;
 
     if (slopeProduct < 0) {
@@ -89,36 +98,56 @@ export function detectTrendZones(
     }
   }
 
-  if (pointClassifications.length > 0) {
-    pointClassifications.push(pointClassifications[pointClassifications.length - 1]);
+  if (pointClassifications.length > 0 && pointClassifications[pointClassifications.length - 2] !== null) {
+    pointClassifications[pointClassifications.length - 1] = pointClassifications[pointClassifications.length - 2];
   }
 
   const zones: TrendZone[] = [];
-  if (pointClassifications.length === 0) {
-    return zones;
-  }
+  let currentType: 'bullish' | 'bearish' | 'neutral' | null = null;
+  let zoneStart: number | null = null;
 
-  let currentType = pointClassifications[0];
-  let zoneStart = 0;
+  for (let i = 0; i < pointClassifications.length; i++) {
+    const classification = pointClassifications[i];
 
-  for (let i = 1; i < pointClassifications.length; i++) {
-    if (pointClassifications[i] !== currentType) {
-      zones.push({
-        startIndex: zoneStart,
-        endIndex: i - 1,
-        type: currentType
-      });
+    if (classification === null) {
+      if (currentType !== null && zoneStart !== null) {
+        zones.push({
+          startIndex: zoneStart,
+          endIndex: i - 1,
+          type: currentType
+        });
+      }
+      currentType = null;
+      zoneStart = null;
+      continue;
+    }
 
-      currentType = pointClassifications[i];
+    if (currentType === null) {
+      currentType = classification;
+      zoneStart = i;
+    } else if (classification !== currentType) {
+      if (zoneStart !== null) {
+        zones.push({
+          startIndex: zoneStart,
+          endIndex: i - 1,
+          type: currentType
+        });
+      }
+      currentType = classification;
       zoneStart = i;
     }
   }
 
-  zones.push({
-    startIndex: zoneStart,
-    endIndex: pointClassifications.length - 1,
-    type: currentType
-  });
+  if (currentType !== null && zoneStart !== null) {
+    zones.push({
+      startIndex: zoneStart,
+      endIndex: pointClassifications.length - 1,
+      type: currentType
+    });
+  }
 
-  return zones;
+  return zones.filter(zone => {
+    const zoneWidth = zone.endIndex - zone.startIndex + 1;
+    return zoneWidth >= minZoneWidth;
+  });
 }

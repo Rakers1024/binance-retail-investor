@@ -46,7 +46,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
 
     const trendZones = detectTrendZones(
       data.map(d => d.retailRatio),
-      pricesOriginal.filter(p => p !== null) as number[]
+      pricesOriginal
     );
 
     const markAreas = trendZones

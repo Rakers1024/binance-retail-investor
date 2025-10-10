@@ -29,7 +29,7 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
 
     const trendZones = detectTrendZones(
       data.map(d => d.retailRatio),
-      prices.filter(p => p !== null) as number[]
+      prices
     );
 
     const markAreas = trendZones
