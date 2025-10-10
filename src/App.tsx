@@ -177,76 +177,78 @@ function App() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                时间周期
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: '5m', label: '5分钟' },
-                  { value: '15m', label: '15分钟' },
-                  { value: '1h', label: '1小时' },
-                  { value: '4h', label: '4小时' },
-                  { value: '1d', label: '1天' }
-                ].map(option => (
-                  <button
-                    key={option.value}
-                    onClick={() => setPeriod(option.value)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      period === option.value
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-4 items-end">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  大户占比 ({(bigUserProportion * 100).toFixed(0)}%)
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  时间周期
                 </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="0.5"
-                  step="0.05"
-                  value={bigUserProportion}
-                  onChange={(e) => setBigUserProportion(parseFloat(e.target.value))}
-                  className="w-40"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="showPrice"
-                  checked={showPrice}
-                  onChange={(e) => setShowPrice(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <label htmlFor="showPrice" className="text-sm font-medium text-gray-700">
-                  显示价格曲线
-                </label>
-              </div>
-
-              <button
-                onClick={fetchData}
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-              >
-                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                刷新
-              </button>
-
-              {lastUpdate && (
-                <div className="text-sm text-gray-500 ml-auto">
-                  最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: '5m', label: '5分钟' },
+                    { value: '15m', label: '15分钟' },
+                    { value: '1h', label: '1小时' },
+                    { value: '4h', label: '4小时' },
+                    { value: '1d', label: '1天' }
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => setPeriod(option.value)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        period === option.value
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              <div className="flex flex-wrap gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    大户占比 ({(bigUserProportion * 100).toFixed(0)}%)
+                  </label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="0.5"
+                    step="0.05"
+                    value={bigUserProportion}
+                    onChange={(e) => setBigUserProportion(parseFloat(e.target.value))}
+                    className="w-40"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="showPrice"
+                    checked={showPrice}
+                    onChange={(e) => setShowPrice(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <label htmlFor="showPrice" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    显示价格曲线
+                  </label>
+                </div>
+
+                <button
+                  onClick={fetchData}
+                  disabled={loading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                >
+                  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                  刷新
+                </button>
+
+                {lastUpdate && (
+                  <div className="text-sm text-gray-500 lg:ml-auto whitespace-nowrap">
+                    最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
