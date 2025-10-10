@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, Users, Building2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, Users, Building2, RefreshCw, ChevronDown, ChevronUp, Sun, Moon, Monitor } from 'lucide-react';
 import RatioCard from './components/RatioCard';
 import LineChart from './components/LineChart';
 import PercentChangeChart from './components/PercentChangeChart';
@@ -27,12 +27,60 @@ function App() {
     percent: false,
     minmax: false
   });
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
 
   const toggleChart = (chartKey: string) => {
     setExpandedCharts(prev => ({
       ...prev,
       [chartKey]: !prev[chartKey]
     }));
+  };
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyTheme = (isDark: boolean) => {
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mediaQuery.matches);
+      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    } else {
+      applyTheme(theme === 'dark');
+    }
+  }, [theme]);
+
+  const cycleTheme = () => {
+    const themes: ('light' | 'dark' | 'system')[] = ['system', 'light', 'dark'];
+    const currentIndex = themes.indexOf(theme);
+    const nextTheme = themes[(currentIndex + 1) % themes.length];
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  };
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'light':
+        return <Sun size={20} />;
+      case 'dark':
+        return <Moon size={20} />;
+      case 'system':
+        return <Monitor size={20} />;
+    }
   };
 
   const fetchData = async () => {
@@ -124,21 +172,30 @@ function App() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            加密货币散户多空比监控面板
-          </h1>
-          <p className="text-gray-600">
-            实时监控散户交易者的多空情绪变化
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              加密货币散户多空比监控面板
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              实时监控散户交易者的多空情绪变化
+            </p>
+          </div>
+          <button
+            onClick={cycleTheme}
+            className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700"
+            title={`当前主题: ${theme === 'system' ? '跟随系统' : theme === 'light' ? '浅色' : '深色'}`}
+          >
+            {getThemeIcon()}
+          </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
           <div className="flex flex-col gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 交易对
               </label>
               <div className="flex flex-wrap gap-2 items-center">
@@ -152,14 +209,14 @@ function App() {
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       symbol === s && !customSymbol
                         ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                     }`}
                   >
                     {s.replace('USDT', '/USDT')}
                   </button>
                 ))}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">或</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">或</span>
                   <input
                     type="text"
                     value={customSymbol}
@@ -171,7 +228,7 @@ function App() {
                       }
                     }}
                     placeholder="输入其他交易对，如 LINKUSDT"
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[240px]"
+                    className="px-4 py-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[240px]"
                   />
                 </div>
               </div>
@@ -179,7 +236,7 @@ function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   时间周期
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -196,7 +253,7 @@ function App() {
                       className={`px-4 py-2 rounded-lg font-medium transition-all ${
                         period === option.value
                           ? 'bg-blue-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                       }`}
                     >
                       {option.label}
@@ -207,7 +264,7 @@ function App() {
 
               <div className="flex flex-wrap gap-4 items-end">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     大户占比 ({(bigUserProportion * 100).toFixed(0)}%)
                   </label>
                   <input
@@ -229,7 +286,7 @@ function App() {
                     onChange={(e) => setShowPrice(e.target.checked)}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <label htmlFor="showPrice" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  <label htmlFor="showPrice" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                     显示价格曲线
                   </label>
                 </div>
@@ -244,7 +301,7 @@ function App() {
                 </button>
 
                 {lastUpdate && (
-                  <div className="text-sm text-gray-500 lg:ml-auto whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 lg:ml-auto whitespace-nowrap">
                     最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}
                   </div>
                 )}
@@ -253,7 +310,7 @@ function App() {
           </div>
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
               {error}
             </div>
           )}
@@ -293,12 +350,12 @@ function App() {
         </div>
 
         {showPrice && chartData.length > 0 && chartData[0].price && (
-          <div className="bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 h-[600px] flex flex-col transition-colors">
             <div className="mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 Z-Score 标准化图（高级）
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 考虑均值和标准差，突出异常偏离。|Z| &gt; 1 为异常，|Z| &gt; 2 为极端信号
               </p>
             </div>
@@ -309,8 +366,8 @@ function App() {
         )}
 
         {!showPrice && (
-          <div className="bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 h-[600px] flex flex-col transition-colors">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
               散户多空比走势图（原始数据 - 双Y轴）
             </h2>
             <div className="flex-1">
@@ -320,16 +377,16 @@ function App() {
         )}
 
         <div className="mt-6 space-y-4">
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden transition-colors">
             <button
               onClick={() => toggleChart('raw')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-gray-100"
             >
               <div className="text-left">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   散户多空比走势图（原始数据 - 双Y轴）
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   原始多空比数据和价格曲线的双Y轴展示
                 </p>
               </div>
@@ -344,16 +401,16 @@ function App() {
 
           {showPrice && chartData.length > 0 && chartData[0].price && (
             <>
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden transition-colors">
                 <button
                   onClick={() => toggleChart('percent')}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-gray-100"
                 >
                   <div className="text-left">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       百分比变化归一化图（推荐）
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       从起点计算变化百分比，统一尺度。金叉（蓝线上穿紫线）= 潜在上涨，死叉 = 转跌
                     </p>
                   </div>
@@ -366,16 +423,16 @@ function App() {
                 )}
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden transition-colors">
                 <button
                   onClick={() => toggleChart('minmax')}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-gray-100"
                 >
                   <div className="text-left">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       Min-Max 归一化图（0-100）
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       将所有数据缩放到0-100范围，交叉点清晰可见，适合查看历史全貌
                     </p>
                   </div>
@@ -391,9 +448,9 @@ function App() {
           )}
         </div>
 
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h3 className="font-semibold text-blue-900 mb-2">说明</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 transition-colors">
+          <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">说明</h3>
+          <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
             <li>• 散户多空比 = 通过整体多空比和大户多空比计算得出的散户交易者多空情绪</li>
             <li>• 数值大于1表示多头占优，小于1表示空头占优</li>
             <li>• 数据来源于币安永续合约市场，每{period === '5m' ? '5分钟' : period === '15m' ? '15分钟' : period === '1h' ? '1小时' : period === '4h' ? '4小时' : '1天'}更新一次</li>
