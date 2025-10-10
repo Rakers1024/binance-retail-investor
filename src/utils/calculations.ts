@@ -62,76 +62,63 @@ export function calculateMA(prices: number[], period: number): (number | null)[]
 export interface TrendZone {
   startIndex: number;
   endIndex: number;
-  type: 'bullish' | 'bearish';
-}
-
-export function calculateSlope(values: number[], startIdx: number, endIdx: number): number {
-  if (startIdx >= endIdx || startIdx < 0 || endIdx >= values.length) {
-    return 0;
-  }
-
-  const x1 = startIdx;
-  const x2 = endIdx;
-  const y1 = values[startIdx];
-  const y2 = values[endIdx];
-
-  return (y2 - y1) / (x2 - x1);
+  type: 'bullish' | 'bearish' | 'neutral';
 }
 
 export function detectTrendZones(
   retailRatios: number[],
-  prices: number[],
-  windowSize: number = 2
+  prices: number[]
 ): TrendZone[] {
-  if (retailRatios.length < windowSize + 1 || prices.length < windowSize + 1) {
+  if (retailRatios.length < 2 || prices.length < 2) {
     return [];
   }
 
-  const zones: TrendZone[] = [];
-  let currentType: 'bullish' | 'bearish' | null = null;
-  let zoneStart: number | null = null;
+  const minLength = Math.min(retailRatios.length, prices.length);
+  const pointClassifications: ('bullish' | 'bearish' | 'neutral')[] = [];
 
-  for (let i = windowSize; i < Math.min(retailRatios.length, prices.length); i++) {
-    const retailSlope = calculateSlope(retailRatios, i - windowSize, i);
-    const priceSlope = calculateSlope(prices, i - windowSize, i);
+  for (let i = 0; i < minLength - 1; i++) {
+    const retailSlope = retailRatios[i + 1] - retailRatios[i];
+    const priceSlope = prices[i + 1] - prices[i];
 
     const slopeProduct = retailSlope * priceSlope;
 
     if (slopeProduct < 0) {
-      const newType: 'bullish' | 'bearish' = priceSlope > 0 ? 'bullish' : 'bearish';
-
-      if (currentType === null || currentType !== newType) {
-        if (zoneStart !== null && currentType !== null) {
-          zones.push({
-            startIndex: zoneStart,
-            endIndex: i - 1,
-            type: currentType
-          });
-        }
-
-        currentType = newType;
-        zoneStart = i - windowSize;
-      }
+      pointClassifications[i] = priceSlope > 0 ? 'bullish' : 'bearish';
     } else {
-      if (zoneStart !== null && currentType !== null) {
-        zones.push({
-          startIndex: zoneStart,
-          endIndex: i - 1,
-          type: currentType
-        });
-      }
-      currentType = null;
-      zoneStart = null;
+      pointClassifications[i] = 'neutral';
     }
   }
 
-  if (zoneStart !== null && currentType !== null) {
-    zones.push({
-      startIndex: zoneStart,
-      endIndex: Math.min(retailRatios.length, prices.length) - 1,
-      type: currentType
-    });
+  if (pointClassifications.length > 0) {
+    pointClassifications.push(pointClassifications[pointClassifications.length - 1]);
   }
+
+  const zones: TrendZone[] = [];
+  if (pointClassifications.length === 0) {
+    return zones;
+  }
+
+  let currentType = pointClassifications[0];
+  let zoneStart = 0;
+
+  for (let i = 1; i < pointClassifications.length; i++) {
+    if (pointClassifications[i] !== currentType) {
+      zones.push({
+        startIndex: zoneStart,
+        endIndex: i - 1,
+        type: currentType
+      });
+
+      currentType = pointClassifications[i];
+      zoneStart = i;
+    }
+  }
+
+  zones.push({
+    startIndex: zoneStart,
+    endIndex: pointClassifications.length - 1,
+    type: currentType
+  });
 
   return zones;
 }

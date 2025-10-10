@@ -23,30 +23,32 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     const ma240 = data.map(d => d.ma240 ?? null);
 
     const trendZones = showPrice && prices.some(p => p !== null)
-      ? detectTrendZones(retailRatios, prices.filter(p => p !== null) as number[], 2)
+      ? detectTrendZones(retailRatios, prices.filter(p => p !== null) as number[])
       : [];
 
-    const markAreas = trendZones.map(zone => ([
-      {
-        xAxis: zone.startIndex,
-        itemStyle: {
-          color: zone.type === 'bullish'
-            ? 'rgba(34, 197, 94, 0.1)'
-            : 'rgba(239, 68, 68, 0.1)'
+    const markAreas = trendZones
+      .filter(zone => zone.type !== 'neutral')
+      .map(zone => ([
+        {
+          xAxis: zone.startIndex,
+          itemStyle: {
+            color: zone.type === 'bullish'
+              ? 'rgba(34, 197, 94, 0.1)'
+              : 'rgba(239, 68, 68, 0.1)'
+          }
+        },
+        {
+          xAxis: zone.endIndex,
+          label: {
+            show: true,
+            position: 'insideTop',
+            formatter: zone.type === 'bullish' ? '涨行情' : '跌行情',
+            color: zone.type === 'bullish' ? '#22c55e' : '#ef4444',
+            fontSize: 11,
+            fontWeight: 'bold'
+          }
         }
-      },
-      {
-        xAxis: zone.endIndex,
-        label: {
-          show: true,
-          position: 'insideTop',
-          formatter: zone.type === 'bullish' ? '涨行情' : '跌行情',
-          color: zone.type === 'bullish' ? '#22c55e' : '#ef4444',
-          fontSize: 11,
-          fontWeight: 'bold'
-        }
-      }
-    ]));
+      ]));
 
     const series: any[] = [
       {
