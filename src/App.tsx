@@ -241,16 +241,20 @@ function App() {
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { value: '5m', label: '5分钟' },
-                    { value: '15m', label: '15分钟' },
+                    { value: '5m', label: '5分' },
+                    { value: '15m', label: '15分' },
+                    { value: '30m', label: '30分' },
                     { value: '1h', label: '1小时' },
+                    { value: '2h', label: '2小时' },
                     { value: '4h', label: '4小时' },
-                    { value: '1d', label: '1天' }
+                    { value: '6h', label: '6小时' },
+                    { value: '12h', label: '12小时' },
+                    { value: '1d', label: '1日' }
                   ].map(option => (
                     <button
                       key={option.value}
                       onClick={() => setPeriod(option.value)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      className={`px-3 py-2 rounded-lg font-medium transition-all text-sm ${
                         period === option.value
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
@@ -453,7 +457,17 @@ function App() {
           <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
             <li>• 散户多空比 = 通过整体多空比和大户多空比计算得出的散户交易者多空情绪</li>
             <li>• 数值大于1表示多头占优，小于1表示空头占优</li>
-            <li>• 数据来源于币安永续合约市场，每{period === '5m' ? '5分钟' : period === '15m' ? '15分钟' : period === '1h' ? '1小时' : period === '4h' ? '4小时' : '1天'}更新一次</li>
+            <li>• 数据来源于币安永续合约市场，每{
+              period === '5m' ? '5分钟' :
+              period === '15m' ? '15分钟' :
+              period === '30m' ? '30分钟' :
+              period === '1h' ? '1小时' :
+              period === '2h' ? '2小时' :
+              period === '4h' ? '4小时' :
+              period === '6h' ? '6小时' :
+              period === '12h' ? '12小时' :
+              '1天'
+            }更新一次</li>
             <li>• 大户占比可调整，默认20%，用于计算散户数据</li>
           </ul>
         </div>
