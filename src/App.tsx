@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, Users, Building2, RefreshCw } from 'lucide-react';
+import { TrendingUp, Users, Building2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import RatioCard from './components/RatioCard';
 import LineChart from './components/LineChart';
 import PercentChangeChart from './components/PercentChangeChart';
@@ -22,6 +22,18 @@ function App() {
   const [globalData, setGlobalData] = useState<RatioData | null>(null);
   const [topTraderData, setTopTraderData] = useState<RatioData | null>(null);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [expandedCharts, setExpandedCharts] = useState<{ [key: string]: boolean }>({
+    raw: false,
+    percent: false,
+    minmax: false
+  });
+
+  const toggleChart = (chartKey: string) => {
+    setExpandedCharts(prev => ({
+      ...prev,
+      [chartKey]: !prev[chartKey]
+    }));
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -278,60 +290,104 @@ function App() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            散户多空比走势图（原始数据 - 双Y轴）
-          </h2>
-          <div className="flex-1">
-            <LineChart data={chartData} showPrice={showPrice} />
-          </div>
-        </div>
-
         {showPrice && chartData.length > 0 && chartData[0].price && (
-          <>
-            <div className="mt-6 bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  百分比变化归一化图（推荐）
-                </h2>
-                <p className="text-sm text-gray-600">
-                  从起点计算变化百分比，统一尺度。金叉（蓝线上穿紫线）= 潜在上涨，死叉 = 转跌
-                </p>
-              </div>
-              <div className="flex-1">
-                <PercentChangeChart data={chartData} />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Z-Score 标准化图（高级）
+              </h2>
+              <p className="text-sm text-gray-600">
+                考虑均值和标准差，突出异常偏离。|Z| &gt; 1 为异常，|Z| &gt; 2 为极端信号
+              </p>
             </div>
-
-            <div className="mt-6 bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Min-Max 归一化图（0-100）
-                </h2>
-                <p className="text-sm text-gray-600">
-                  将所有数据缩放到0-100范围，交叉点清晰可见，适合查看历史全貌
-                </p>
-              </div>
-              <div className="flex-1">
-                <MinMaxNormalizedChart data={chartData} />
-              </div>
+            <div className="flex-1">
+              <ZScoreChart data={chartData} />
             </div>
-
-            <div className="mt-6 bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Z-Score 标准化图（高级）
-                </h2>
-                <p className="text-sm text-gray-600">
-                  考虑均值和标准差，突出异常偏离。|Z| &gt; 1 为异常，|Z| &gt; 2 为极端信号
-                </p>
-              </div>
-              <div className="flex-1">
-                <ZScoreChart data={chartData} />
-              </div>
-            </div>
-          </>
+          </div>
         )}
+
+        {!showPrice && (
+          <div className="bg-white rounded-xl shadow-sm p-6 h-[600px] flex flex-col">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              散户多空比走势图（原始数据 - 双Y轴）
+            </h2>
+            <div className="flex-1">
+              <LineChart data={chartData} showPrice={showPrice} />
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 space-y-4">
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <button
+              onClick={() => toggleChart('raw')}
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  散户多空比走势图（原始数据 - 双Y轴）
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  原始多空比数据和价格曲线的双Y轴展示
+                </p>
+              </div>
+              {expandedCharts.raw ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
+            {expandedCharts.raw && (
+              <div className="px-6 pb-6 h-[600px]">
+                <LineChart data={chartData} showPrice={showPrice} />
+              </div>
+            )}
+          </div>
+
+          {showPrice && chartData.length > 0 && chartData[0].price && (
+            <>
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => toggleChart('percent')}
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      百分比变化归一化图（推荐）
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      从起点计算变化百分比，统一尺度。金叉（蓝线上穿紫线）= 潜在上涨，死叉 = 转跌
+                    </p>
+                  </div>
+                  {expandedCharts.percent ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedCharts.percent && (
+                  <div className="px-6 pb-6 h-[600px]">
+                    <PercentChangeChart data={chartData} />
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => toggleChart('minmax')}
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Min-Max 归一化图（0-100）
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      将所有数据缩放到0-100范围，交叉点清晰可见，适合查看历史全貌
+                    </p>
+                  </div>
+                  {expandedCharts.minmax ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedCharts.minmax && (
+                  <div className="px-6 pb-6 h-[600px]">
+                    <MinMaxNormalizedChart data={chartData} />
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
           <h3 className="font-semibold text-blue-900 mb-2">说明</h3>
