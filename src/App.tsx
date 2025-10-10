@@ -6,7 +6,7 @@ import PercentChangeChart from './components/PercentChangeChart';
 import MinMaxNormalizedChart from './components/MinMaxNormalizedChart';
 import ZScoreChart from './components/ZScoreChart';
 import { fetchGlobalLongShortRatio, fetchTopTraderLongShortRatio, fetchKlineData } from './services/binance';
-import { calculateRetailRatio, calculateMA } from './utils/calculations';
+import { calculateRetailRatio, calculateMA, detectTrendZones } from './utils/calculations';
 import { RatioData, ChartDataPoint } from './types';
 
 function App() {
@@ -28,6 +28,7 @@ function App() {
     minmax: false
   });
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [periodTrends, setPeriodTrends] = useState<{ [key: string]: 'bullish' | 'bearish' | 'neutral' | null }>({});
 
   const toggleChart = (chartKey: string) => {
     setExpandedCharts(prev => ({
@@ -149,6 +150,22 @@ function App() {
 
         setChartData(chartPoints);
         setLastUpdate(new Date());
+
+        // 计算当前周期的最新行情趋势
+        if (showPrice && chartPoints.length > 0 && chartPoints[0].price) {
+          const retailRatios = chartPoints.map(d => d.retailRatio);
+          const prices = chartPoints.map(d => d.price!).filter(p => p !== null && p !== undefined);
+          const trendZones = detectTrendZones(retailRatios, prices, 1);
+
+          // 获取最后一个趋势区间的类型
+          if (trendZones.length > 0) {
+            const lastZone = trendZones[trendZones.length - 1];
+            setPeriodTrends(prev => ({
+              ...prev,
+              [period]: lastZone.type
+            }));
+          }
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取数据失败');
@@ -205,6 +222,7 @@ function App() {
                     onClick={() => {
                       setSymbol(s);
                       setCustomSymbol('');
+                      setPeriodTrends({});
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       symbol === s && !customSymbol
@@ -225,6 +243,7 @@ function App() {
                       setCustomSymbol(value);
                       if (value) {
                         setSymbol(value);
+                        setPeriodTrends({});
                       }
                     }}
                     placeholder="输入其他交易对，如 LINKUSDT"
@@ -250,19 +269,33 @@ function App() {
                     { value: '6h', label: '6小时' },
                     { value: '12h', label: '12小时' },
                     { value: '1d', label: '1日' }
-                  ].map(option => (
-                    <button
-                      key={option.value}
-                      onClick={() => setPeriod(option.value)}
-                      className={`px-3 py-2 rounded-lg font-medium transition-all text-sm ${
-                        period === option.value
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  ].map(option => {
+                    const trend = periodTrends[option.value];
+                    const isActive = period === option.value;
+
+                    let buttonClass = 'px-3 py-2 rounded-lg font-medium transition-all text-sm ';
+
+                    if (isActive) {
+                      buttonClass += 'bg-blue-600 text-white shadow-md';
+                    } else if (trend === 'bullish') {
+                      buttonClass += 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500 dark:border-green-600 hover:bg-green-200 dark:hover:bg-green-900/40';
+                    } else if (trend === 'bearish') {
+                      buttonClass += 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-500 dark:border-red-600 hover:bg-red-200 dark:hover:bg-red-900/40';
+                    } else {
+                      buttonClass += 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600';
+                    }
+
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => setPeriod(option.value)}
+                        className={buttonClass}
+                        title={trend === 'bullish' ? '涨行情' : trend === 'bearish' ? '跌行情' : undefined}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
