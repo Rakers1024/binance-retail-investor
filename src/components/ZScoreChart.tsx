@@ -47,9 +47,9 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
     const volumes = data.map(d => d.volume ?? null);
     const volumeColors = data.map(d => {
       if (d.close && d.open) {
-        return d.close >= d.open ? '#22c55e' : '#ef4444';
+        return d.close >= d.open ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
       }
-      return 'rgba(156, 163, 175, 0.5)';
+      return 'rgba(156, 163, 175, 0.3)';
     });
 
     const trendZones = detectTrendZones(
@@ -94,7 +94,44 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       ];
     });
 
+    const zRetailPositive = zRetailRatios.map(z => z >= 0 ? z : 0);
+    const zRetailNegative = zRetailRatios.map(z => z < 0 ? z : 0);
+
     const series: any[] = [
+      {
+        name: '散户多空比 Z-Score (正)',
+        type: 'line',
+        data: zRetailPositive,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          width: 0
+        },
+        areaStyle: {
+          color: 'rgba(34, 197, 94, 0.25)'
+        },
+        stack: 'zscore',
+        silent: true,
+        showSymbol: false
+      },
+      {
+        name: '散户多空比 Z-Score (负)',
+        type: 'line',
+        data: zRetailNegative,
+        yAxisIndex: 0,
+        smooth: false,
+        symbol: 'none',
+        lineStyle: {
+          width: 0
+        },
+        areaStyle: {
+          color: 'rgba(239, 68, 68, 0.25)'
+        },
+        stack: 'zscore',
+        silent: true,
+        showSymbol: false
+      },
       {
         name: '散户多空比 Z-Score',
         type: 'line',
@@ -109,22 +146,6 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         },
         itemStyle: {
           color: 'rgb(59, 130, 246)'
-        },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [{
-              offset: 0,
-              color: 'rgba(59, 130, 246, 0.2)'
-            }, {
-              offset: 1,
-              color: 'rgba(59, 130, 246, 0)'
-            }]
-          }
         },
         markArea: markAreas.length > 0 ? {
           silent: true,
@@ -189,7 +210,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         smooth: false,
         symbol: 'none',
         lineStyle: {
-          color: '#86efac',
+          color: 'rgba(134, 239, 172, 0.7)',
           width: 1.5
         }
       });
@@ -204,7 +225,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         smooth: false,
         symbol: 'none',
         lineStyle: {
-          color: '#22c55e',
+          color: 'rgba(34, 197, 94, 0.7)',
           width: 1.5
         }
       });

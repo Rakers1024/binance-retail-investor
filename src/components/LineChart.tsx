@@ -25,9 +25,9 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     const volumes = data.map(d => d.volume ?? null);
     const volumeColors = data.map(d => {
       if (d.close && d.open) {
-        return d.close >= d.open ? '#22c55e' : '#ef4444';
+        return d.close >= d.open ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
       }
-      return 'rgba(156, 163, 175, 0.5)';
+      return 'rgba(156, 163, 175, 0.3)';
     });
 
     const trendZones = showPrice && prices.some(p => p !== null)
@@ -95,7 +95,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
             y2: 1,
             colorStops: [{
               offset: 0,
-              color: 'rgba(59, 130, 246, 0.3)'
+              color: 'rgba(59, 130, 246, 0.2)'
             }, {
               offset: 1,
               color: 'rgba(59, 130, 246, 0)'
@@ -164,7 +164,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
           smooth: false,
           symbol: 'none',
           lineStyle: {
-            color: '#86efac',
+            color: 'rgba(134, 239, 172, 0.7)',
             width: 1.5
           }
         });
@@ -179,7 +179,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
           smooth: false,
           symbol: 'none',
           lineStyle: {
-            color: '#22c55e',
+            color: 'rgba(34, 197, 94, 0.7)',
             width: 1.5
           }
         });
