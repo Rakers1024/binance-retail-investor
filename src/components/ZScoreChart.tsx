@@ -172,10 +172,8 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
           color: '#22c55e',
           color0: '#ef4444',
           borderColor: '#22c55e',
-          borderColor0: '#ef4444',
-          borderWidth: 2
-        },
-        barWidth: '60%'
+          borderColor0: '#ef4444'
+        }
       }
     ];
 
