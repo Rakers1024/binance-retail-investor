@@ -470,17 +470,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
           }
         }] : [])
       ],
-      series: series,
-      visualMap: {
-        show: false,
-        pieces: [
-          { gte: 2, color: '#ef4444' },
-          { gt: 1, lt: 2, color: '#f59e0b' },
-          { gte: -1, lte: 1, color: '#10b981' },
-          { gt: -2, lt: -1, color: '#f59e0b' },
-          { lte: -2, color: '#ef4444' }
-        ]
-      }
+      series: series
     };
   }, [data]);
 
