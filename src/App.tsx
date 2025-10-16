@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, Users, Building2, RefreshCw, ChevronDown, ChevronUp, Sun, Moon, Monitor } from 'lucide-react';
+import { TrendingUp, Users, Building2, RefreshCw, ChevronDown, ChevronUp, Sun, Moon, Monitor, Bell } from 'lucide-react';
 import RatioCard from './components/RatioCard';
 import LineChart from './components/LineChart';
 import PercentChangeChart from './components/PercentChangeChart';
 import MinMaxNormalizedChart from './components/MinMaxNormalizedChart';
 import ZScoreChart from './components/ZScoreChart';
+import NotificationSettings from './components/NotificationSettings';
 import { fetchGlobalLongShortRatio, fetchTopTraderLongShortRatio, fetchKlineData } from './services/binance';
 import { calculateRetailRatio, calculateMA, detectTrendZones } from './utils/calculations';
 import { RatioData, ChartDataPoint } from './types';
+import { notificationService } from './services/notificationService';
 
 function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
@@ -29,6 +31,7 @@ function App() {
   });
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [periodTrends, setPeriodTrends] = useState<{ [key: string]: 'bullish' | 'bearish' | 'neutral' | null }>({});
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
 
   const toggleChart = (chartKey: string) => {
     setExpandedCharts(prev => ({
@@ -42,6 +45,13 @@ function App() {
     if (savedTheme) {
       setTheme(savedTheme);
     }
+
+    notificationService.start();
+    notificationService.requestPermission();
+
+    return () => {
+      notificationService.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -210,13 +220,22 @@ function App() {
               实时监控散户交易者的多空情绪变化
             </p>
           </div>
-          <button
-            onClick={cycleTheme}
-            className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700"
-            title={`当前主题: ${theme === 'system' ? '跟随系统' : theme === 'light' ? '浅色' : '深色'}`}
-          >
-            {getThemeIcon()}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowNotificationSettings(true)}
+              className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700"
+              title="收线提示音设置"
+            >
+              <Bell size={20} />
+            </button>
+            <button
+              onClick={cycleTheme}
+              className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700"
+              title={`当前主题: ${theme === 'system' ? '跟随系统' : theme === 'light' ? '浅色' : '深色'}`}
+            >
+              {getThemeIcon()}
+            </button>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
@@ -514,6 +533,11 @@ function App() {
             <li>• 大户占比可调整，默认20%，用于计算散户数据</li>
           </ul>
         </div>
+
+        <NotificationSettings
+          isOpen={showNotificationSettings}
+          onClose={() => setShowNotificationSettings(false)}
+        />
       </div>
     </div>
   );
