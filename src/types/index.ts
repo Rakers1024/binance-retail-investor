@@ -24,6 +24,10 @@ export interface ChartDataPoint {
   bigUserLong?: number;
   bigUserShort?: number;
   price?: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
   ma120?: number | null;
   ma240?: number | null;
   volume?: number;

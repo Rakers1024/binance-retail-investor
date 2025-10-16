@@ -38,7 +38,14 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
     const normalizedMa25 = data.map(d => d.ma240 ? ((d.ma240 - minMa25) / (maxMa25 - minMa25)) * 100 : null);
 
     const pricesOriginal = data.map(d => d.price ?? null);
+    const candlestickData = data.map(d => d.open && d.close && d.low && d.high ? [d.open, d.close, d.low, d.high] : null);
     const volumes = data.map(d => d.volume ?? null);
+    const volumeColors = data.map(d => {
+      if (d.close && d.open) {
+        return d.close >= d.open ? '#22c55e' : '#ef4444';
+      }
+      return 'rgba(156, 163, 175, 0.5)';
+    });
 
     const trendZones = detectTrendZones(
       normalizedRetailRatio,
@@ -153,15 +160,14 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
       },
       {
         name: '价格（原始）',
-        type: 'line',
-        data: pricesOriginal,
+        type: 'candlestick',
+        data: candlestickData,
         yAxisIndex: 1,
-        smooth: false,
-        symbol: 'none',
-        lineStyle: {
-          color: '#fbbf24',
-          width: 1.5,
-          type: 'dashed'
+        itemStyle: {
+          color: '#22c55e',
+          color0: '#ef4444',
+          borderColor: '#22c55e',
+          borderColor0: '#ef4444'
         }
       }
     ];
@@ -235,11 +241,11 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
       series.push({
         name: '交易量',
         type: 'bar',
-        data: volumes,
-        yAxisIndex: 1,
-        itemStyle: {
-          color: 'rgba(156, 163, 175, 0.5)'
-        },
+        data: volumes.map((v, i) => ({
+          value: v,
+          itemStyle: { color: volumeColors[i] }
+        })),
+        yAxisIndex: 2,
         barMaxWidth: 10
       });
     }
@@ -357,7 +363,7 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
       xAxis: {
         type: 'category',
         data: timestamps,
-        boundaryGap: false,
+        boundaryGap: true,
         axisLabel: {
           color: '#9ca3af',
           fontSize: 10,
@@ -414,30 +420,32 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
             show: false
           }
         },
-        ...(volumes.some(v => v !== null) ? [{
-          type: 'value',
-          name: '\u4ea4\u6613\u91cf',
-          position: 'right',
-          offset: 60,
-          scale: true,
-          axisLabel: {
-            formatter: (value: number) => {
-              if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-              if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-              return value.toFixed(0);
-            },
-            color: '#9ca3af'
-          },
-          axisLine: {
-            show: true,
-            lineStyle: {
+        ...(volumes.some(v => v !== null) ? [
+          {
+            type: 'value',
+            name: '\u4ea4\u6613\u91cf',
+            position: 'right',
+            offset: 60,
+            scale: true,
+            axisLabel: {
+              formatter: (value: number) => {
+                if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+                return value.toFixed(0);
+              },
               color: '#9ca3af'
+            },
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: '#9ca3af'
+              }
+            },
+            splitLine: {
+              show: false
             }
-          },
-          splitLine: {
-            show: false
           }
-        }] : [])
+        ] : [])
       ],
       series: series
     };

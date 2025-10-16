@@ -110,7 +110,7 @@ function mergeAdjacentZones(zones: TrendZone[]): TrendZone[] {
 export function detectTrendZones(
   retailRatios: number[],
   prices: number[],
-  windowSize: number = 1
+  _windowSize: number = 1
 ): TrendZone[] {
   const minLength = Math.min(retailRatios.length, prices.length);
   if (minLength < 2) {
