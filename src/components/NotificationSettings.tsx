@@ -63,7 +63,8 @@ export default function NotificationSettings({ isOpen, onClose }: NotificationSe
   };
 
   const testNotification = () => {
-    const audio = new Audio('/notification.mp3');
+    const soundUrl = import.meta.env.VITE_NOTIFICATION_SOUND_URL || 'https://bigsoundbank.com/UPLOAD/mp3/1616.mp3';
+    const audio = new Audio(soundUrl);
     audio.play().catch(err => {
       console.error('Failed to play notification:', err);
       alert('无法播放提示音。请确保浏览器允许播放音频，并且音频文件存在。');

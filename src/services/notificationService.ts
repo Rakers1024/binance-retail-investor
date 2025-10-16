@@ -6,7 +6,8 @@ export class NotificationService {
   private lastNotificationTime: { [key: string]: number } = {};
 
   constructor() {
-    this.audio = new Audio('/notification.mp3');
+    const soundUrl = import.meta.env.VITE_NOTIFICATION_SOUND_URL || 'https://bigsoundbank.com/UPLOAD/mp3/1616.mp3';
+    this.audio = new Audio(soundUrl);
   }
 
   start() {
