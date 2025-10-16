@@ -135,21 +135,23 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     ];
 
     if (showPrice && prices.some(p => p !== null)) {
+      const candleData = data.map(d => {
+        if (d.open && d.high && d.low && d.close) {
+          return [d.open, d.close, d.low, d.high];
+        }
+        return null;
+      });
+
       series.push({
         name: '价格',
-        type: 'line',
-        data: prices,
+        type: 'candlestick',
+        data: candleData,
         yAxisIndex: 1,
-        smooth: false,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: {
-          color: '#a78bfa',
-          width: 2,
-          type: 'dashed'
-        },
         itemStyle: {
-          color: '#a78bfa'
+          color: '#22c55e',
+          color0: '#ef4444',
+          borderColor: '#22c55e',
+          borderColor0: '#ef4444'
         }
       });
 
@@ -185,14 +187,23 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     }
 
     if (showPrice && volumes.some(v => v !== null)) {
+      const volumeData = data.map((d, idx) => {
+        if (d.volume !== null && d.open && d.close) {
+          return {
+            value: d.volume,
+            itemStyle: {
+              color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
+            }
+          };
+        }
+        return null;
+      });
+
       series.push({
         name: '交易量',
         type: 'bar',
-        data: volumes,
+        data: volumeData,
         yAxisIndex: 2,
-        itemStyle: {
-          color: 'rgba(156, 163, 175, 0.5)'
-        },
         barMaxWidth: 10
       });
     }
@@ -353,11 +364,27 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
             </div>` : ''}
           </div>`;
 
-          if (showPrice && point.price) {
-            tooltip += `<div style="background: rgba(167, 139, 250, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(167, 139, 250, 0.5);">
-              <div style="display: flex; justify-content: space-between; margin-bottom: ${point.ma120 || point.ma240 ? '8px' : '0'};">
-                <span style="color: rgb(196, 181, 253); font-weight: 600; font-size: 11px;">价格</span>
-                <span style="color: rgb(221, 214, 254); font-weight: bold; font-size: 12px;">$${point.price.toFixed(2)}</span>
+          if (showPrice && point.open && point.close) {
+            const isUp = point.close >= point.open;
+            const priceColor = isUp ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+            const priceBorder = isUp ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+
+            tooltip += `<div style="background: ${priceColor}; padding: 10px; border-radius: 6px; border: 1px solid ${priceBorder};">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                <span style="color: #d1d5db;">开盘:</span>
+                <span style="color: #e5e7eb; font-weight: 500;">$${point.open.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                <span style="color: #d1d5db;">最高:</span>
+                <span style="color: #e5e7eb; font-weight: 500;">$${point.high?.toFixed(2) || point.close.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                <span style="color: #d1d5db;">最低:</span>
+                <span style="color: #e5e7eb; font-weight: 500;">$${point.low?.toFixed(2) || point.open.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: ${point.ma120 || point.ma240 ? '8px' : '0'};">
+                <span style="color: #d1d5db;">收盘:</span>
+                <span style="color: #f3f4f6; font-weight: bold; font-size: 12px;">$${point.close.toFixed(2)}</span>
               </div>
               ${point.ma120 ? `
               <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
@@ -413,7 +440,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       xAxis: {
         type: 'category',
         data: timestamps,
-        boundaryGap: false,
+        boundaryGap: showPrice ? true : false,
         axisLabel: {
           color: '#9ca3af',
           fontSize: 10,
