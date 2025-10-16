@@ -40,8 +40,14 @@ export class NotificationService {
     return {
       enabled: true,
       timeframes: {
+        '5m': false,
+        '15m': false,
+        '30m': false,
         '1h': true,
+        '2h': false,
         '4h': true,
+        '6h': false,
+        '12h': false,
         '1d': true,
       },
     };
@@ -60,17 +66,43 @@ export class NotificationService {
     const minutes = utcTime.getUTCMinutes();
     const seconds = utcTime.getUTCSeconds();
 
-    if (minutes === 0 && seconds === 0) {
-      if (config.timeframes['1h']) {
-        this.notify('1h');
+    if (seconds === 0) {
+      if (config.timeframes['5m'] && minutes % 5 === 0) {
+        this.notify('5m');
       }
 
-      if (config.timeframes['4h'] && hours % 4 === 0) {
-        this.notify('4h');
+      if (config.timeframes['15m'] && minutes % 15 === 0) {
+        this.notify('15m');
       }
 
-      if (config.timeframes['1d'] && hours === 0) {
-        this.notify('1d');
+      if (config.timeframes['30m'] && minutes % 30 === 0) {
+        this.notify('30m');
+      }
+
+      if (minutes === 0) {
+        if (config.timeframes['1h']) {
+          this.notify('1h');
+        }
+
+        if (config.timeframes['2h'] && hours % 2 === 0) {
+          this.notify('2h');
+        }
+
+        if (config.timeframes['4h'] && hours % 4 === 0) {
+          this.notify('4h');
+        }
+
+        if (config.timeframes['6h'] && hours % 6 === 0) {
+          this.notify('6h');
+        }
+
+        if (config.timeframes['12h'] && hours % 12 === 0) {
+          this.notify('12h');
+        }
+
+        if (config.timeframes['1d'] && hours === 0) {
+          this.notify('1d');
+        }
       }
     }
   }

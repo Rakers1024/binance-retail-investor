@@ -9,8 +9,14 @@ interface NotificationSettingsProps {
 export interface NotificationConfig {
   enabled: boolean;
   timeframes: {
+    '5m': boolean;
+    '15m': boolean;
+    '30m': boolean;
     '1h': boolean;
+    '2h': boolean;
     '4h': boolean;
+    '6h': boolean;
+    '12h': boolean;
     '1d': boolean;
   };
 }
@@ -18,8 +24,14 @@ export interface NotificationConfig {
 const DEFAULT_CONFIG: NotificationConfig = {
   enabled: true,
   timeframes: {
+    '5m': false,
+    '15m': false,
+    '30m': false,
     '1h': true,
+    '2h': false,
     '4h': true,
+    '6h': false,
+    '12h': false,
     '1d': true,
   },
 };
@@ -108,48 +120,32 @@ export default function NotificationSettings({ isOpen, onClose }: NotificationSe
               收线周期 (UTC+0)
             </label>
 
-            <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  checked={config.timeframes['1h']}
-                  onChange={() => handleTimeframeToggle('1h')}
-                  disabled={!config.enabled}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
-                />
-                <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-900">1小时</span>
-                  <p className="text-xs text-gray-500">每小时整点提醒</p>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  checked={config.timeframes['4h']}
-                  onChange={() => handleTimeframeToggle('4h')}
-                  disabled={!config.enabled}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
-                />
-                <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-900">4小时</span>
-                  <p className="text-xs text-gray-500">00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC</p>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  checked={config.timeframes['1d']}
-                  onChange={() => handleTimeframeToggle('1d')}
-                  disabled={!config.enabled}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
-                />
-                <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-900">1天</span>
-                  <p className="text-xs text-gray-500">每天 00:00 UTC 提醒</p>
-                </div>
-              </label>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {[
+                { value: '5m', label: '5分钟', desc: '每5分钟提醒 (00, 05, 10, 15...)' },
+                { value: '15m', label: '15分钟', desc: '每15分钟提醒 (00, 15, 30, 45)' },
+                { value: '30m', label: '30分钟', desc: '每30分钟提醒 (00, 30)' },
+                { value: '1h', label: '1小时', desc: '每小时整点提醒' },
+                { value: '2h', label: '2小时', desc: '每2小时提醒 (00:00, 02:00, 04:00...)' },
+                { value: '4h', label: '4小时', desc: '00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC' },
+                { value: '6h', label: '6小时', desc: '00:00, 06:00, 12:00, 18:00 UTC' },
+                { value: '12h', label: '12小时', desc: '00:00, 12:00 UTC' },
+                { value: '1d', label: '1天', desc: '每天 00:00 UTC 提醒' },
+              ].map(option => (
+                <label key={option.value} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={config.timeframes[option.value as keyof NotificationConfig['timeframes']]}
+                    onChange={() => handleTimeframeToggle(option.value as keyof NotificationConfig['timeframes'])}
+                    disabled={!config.enabled}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-gray-900">{option.label}</span>
+                    <p className="text-xs text-gray-500">{option.desc}</p>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
 
