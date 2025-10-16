@@ -135,23 +135,21 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     ];
 
     if (showPrice && prices.some(p => p !== null)) {
-      // 准备K线数据 [open, close, lowest, highest]
-      const candlestickData = data.map(d =>
-        d.open !== undefined && d.close !== undefined && d.low !== undefined && d.high !== undefined
-          ? [d.open, d.close, d.low, d.high]
-          : null
-      );
-
       series.push({
-        name: 'K线',
-        type: 'candlestick',
-        data: candlestickData,
+        name: '价格',
+        type: 'line',
+        data: prices,
         yAxisIndex: 1,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#a78bfa',
+          width: 2,
+          type: 'dashed'
+        },
         itemStyle: {
-          color: '#22c55e',           // 阳线（涨）填充色
-          color0: '#ef4444',          // 阴线（跌）填充色
-          borderColor: '#22c55e',     // 阳线边框
-          borderColor0: '#ef4444'     // 阴线边框
+          color: '#a78bfa'
         }
       });
 
@@ -187,24 +185,14 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     }
 
     if (showPrice && volumes.some(v => v !== null)) {
-      // 根据K线涨跌为交易量着色
-      const volumeData = data.map((d, index) => {
-        if (d.volume === undefined) return null;
-
-        const isUp = d.close !== undefined && d.open !== undefined && d.close >= d.open;
-        return {
-          value: d.volume,
-          itemStyle: {
-            color: isUp ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'  // 涨绿跌红
-          }
-        };
-      });
-
       series.push({
         name: '交易量',
         type: 'bar',
-        data: volumeData,
+        data: volumes,
         yAxisIndex: 2,
+        itemStyle: {
+          color: 'rgba(156, 163, 175, 0.5)'
+        },
         barMaxWidth: 10
       });
     }
