@@ -43,6 +43,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
     const zMa25Mapped = data.map(d => d.ma240 ? zMa25[ma25Index++] : null);
 
     const pricesOriginal = data.map(d => d.price ?? null);
+    const volumes = data.map(d => d.volume ?? null);
 
     const trendZones = detectTrendZones(
       zRetailRatios,
@@ -235,6 +236,19 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       });
     }
 
+    if (volumes.some(v => v !== null)) {
+      series.push({
+        name: '交易量',
+        type: 'bar',
+        data: volumes,
+        yAxisIndex: 2,
+        itemStyle: {
+          color: 'rgba(156, 163, 175, 0.5)'
+        },
+        barMaxWidth: 10
+      });
+    }
+
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -340,7 +354,7 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
       },
       grid: {
         left: '50',
-        right: '70',
+        right: volumes.some(v => v !== null) ? '140' : '70',
         top: '40',
         bottom: '40',
         containLabel: false
@@ -403,7 +417,31 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
           splitLine: {
             show: false
           }
-        }
+        },
+        ...(volumes.some(v => v !== null) ? [{
+          type: 'value',
+          name: '交易量',
+          position: 'right',
+          offset: 60,
+          scale: true,
+          axisLabel: {
+            formatter: (value: number) => {
+              if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+              if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+              return value.toFixed(0);
+            },
+            color: '#9ca3af'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#9ca3af'
+            }
+          },
+          splitLine: {
+            show: false
+          }
+        }] : [])
       ],
       series: series,
       visualMap: {

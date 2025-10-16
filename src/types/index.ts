@@ -26,6 +26,7 @@ export interface ChartDataPoint {
   price?: number;
   ma120?: number | null;
   ma240?: number | null;
+  volume?: number;
 }
 
 export interface KlineData {

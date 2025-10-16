@@ -21,6 +21,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     const prices = data.map(d => d.price ?? null);
     const ma120 = data.map(d => d.ma120 ?? null);
     const ma240 = data.map(d => d.ma240 ?? null);
+    const volumes = data.map(d => d.volume ?? null);
 
     const trendZones = showPrice && prices.some(p => p !== null)
       ? detectTrendZones(retailRatios, prices.filter(p => p !== null) as number[], 1)
@@ -183,6 +184,19 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       }
     }
 
+    if (showPrice && volumes.some(v => v !== null)) {
+      series.push({
+        name: '交易量',
+        type: 'bar',
+        data: volumes,
+        yAxisIndex: 2,
+        itemStyle: {
+          color: 'rgba(156, 163, 175, 0.5)'
+        },
+        barMaxWidth: 10
+      });
+    }
+
     const yAxis: any[] = [
       {
         type: 'value',
@@ -228,6 +242,33 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
           show: false
         }
       });
+
+      if (volumes.some(v => v !== null)) {
+        yAxis.push({
+          type: 'value',
+          name: '交易量',
+          position: 'right',
+          offset: 60,
+          scale: true,
+          axisLabel: {
+            formatter: (value: number) => {
+              if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+              if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+              return value.toFixed(0);
+            },
+            color: '#9ca3af'
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#9ca3af'
+            }
+          },
+          splitLine: {
+            show: false
+          }
+        });
+      }
     }
 
     return {
@@ -329,6 +370,15 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
                 <span style="color: rgb(134, 239, 172); font-weight: 500;">$${point.ma240.toFixed(2)}</span>
               </div>` : ''}
             </div>`;
+
+            if (point.volume) {
+              tooltip += `<div style="background: rgba(156, 163, 175, 0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(156, 163, 175, 0.5); margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: rgb(209, 213, 219); font-weight: 600; font-size: 11px;">交易量</span>
+                  <span style="color: rgb(229, 231, 235); font-weight: bold; font-size: 12px;">${point.volume >= 1000000 ? (point.volume / 1000000).toFixed(2) + 'M' : point.volume >= 1000 ? (point.volume / 1000).toFixed(2) + 'K' : point.volume.toFixed(2)}</span>
+                </div>
+              </div>`;
+            }
           }
 
           tooltip += '</div></div>';
@@ -355,7 +405,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       },
       grid: {
         left: '50',
-        right: showPrice ? '70' : '10',
+        right: showPrice && volumes.some(v => v !== null) ? '140' : showPrice ? '70' : '10',
         top: '40',
         bottom: '40',
         containLabel: false

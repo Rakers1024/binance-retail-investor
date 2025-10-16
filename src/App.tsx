@@ -130,6 +130,7 @@ function App() {
 
           const kline = klineData ? klineData[klineData.length - globalRatios.length + index] : null;
           const price = kline ? parseFloat(kline.close) : undefined;
+          const volume = kline ? parseFloat(kline.volume) : undefined;
 
           return {
             timestamp: global.timestamp,
@@ -144,7 +145,8 @@ function App() {
             bigUserShort: parseFloat(topTrader.shortAccount) * 100,
             price,
             ma120: ma120Values[index],
-            ma240: ma240Values[index]
+            ma240: ma240Values[index],
+            volume
           };
         }).filter(Boolean) as ChartDataPoint[];
 
