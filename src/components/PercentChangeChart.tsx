@@ -156,8 +156,9 @@ export default function PercentChangeChart({ data }: PercentChangeChartProps) {
       itemStyle: {
         color: '#22c55e',
         color0: '#ef4444',
-        borderColor: '#22c55e',
-        borderColor0: '#ef4444'
+        borderColor: '#16a34a',
+        borderColor0: '#dc2626',
+        borderWidth: 1
       }
     });
 

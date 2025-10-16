@@ -148,10 +148,11 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
         data: candlestickData,
         yAxisIndex: 1,
         itemStyle: {
-          color: '#22c55e',        // 涨（阳线）绿色
-          color0: '#ef4444',       // 跌（阴线）红色
-          borderColor: '#22c55e',
-          borderColor0: '#ef4444'
+          color: '#22c55e',           // 涨（收盘>开盘）实心绿色
+          color0: '#ef4444',          // 跌（收盘<开盘）实心红色
+          borderColor: '#16a34a',     // 涨的边框深绿色
+          borderColor0: '#dc2626',    // 跌的边框深红色
+          borderWidth: 1
         }
       });
 
