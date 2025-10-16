@@ -135,7 +135,7 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     ];
 
     if (showPrice && prices.some(p => p !== null)) {
-      // 准备K线数据 [open, close, low, high]
+      // 准备K线数据 [open, close, lowest, highest]
       const candlestickData = data.map(d =>
         d.open !== undefined && d.close !== undefined && d.low !== undefined && d.high !== undefined
           ? [d.open, d.close, d.low, d.high]
@@ -148,11 +148,10 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
         data: candlestickData,
         yAxisIndex: 1,
         itemStyle: {
-          color: '#22c55e',           // 涨（收盘>开盘）实心绿色
-          color0: '#ef4444',          // 跌（收盘<开盘）实心红色
-          borderColor: '#16a34a',     // 涨的边框深绿色
-          borderColor0: '#dc2626',    // 跌的边框深红色
-          borderWidth: 1
+          color: '#22c55e',           // 阳线（涨）填充色
+          color0: '#ef4444',          // 阴线（跌）填充色
+          borderColor: '#22c55e',     // 阳线边框
+          borderColor0: '#ef4444'     // 阴线边框
         }
       });
 
