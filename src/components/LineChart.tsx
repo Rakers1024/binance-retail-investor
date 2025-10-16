@@ -135,21 +135,23 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     ];
 
     if (showPrice && prices.some(p => p !== null)) {
+      // 准备K线数据 [open, close, low, high]
+      const candlestickData = data.map(d =>
+        d.open !== undefined && d.close !== undefined && d.low !== undefined && d.high !== undefined
+          ? [d.open, d.close, d.low, d.high]
+          : null
+      );
+
       series.push({
-        name: '价格',
-        type: 'line',
-        data: prices,
+        name: 'K线',
+        type: 'candlestick',
+        data: candlestickData,
         yAxisIndex: 1,
-        smooth: false,
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: {
-          color: '#a78bfa',
-          width: 2,
-          type: 'dashed'
-        },
         itemStyle: {
-          color: '#a78bfa'
+          color: '#22c55e',        // 涨（阳线）绿色
+          color0: '#ef4444',       // 跌（阴线）红色
+          borderColor: '#22c55e',
+          borderColor0: '#ef4444'
         }
       });
 
@@ -185,14 +187,24 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
     }
 
     if (showPrice && volumes.some(v => v !== null)) {
+      // 根据K线涨跌为交易量着色
+      const volumeData = data.map((d, index) => {
+        if (d.volume === undefined) return null;
+
+        const isUp = d.close !== undefined && d.open !== undefined && d.close >= d.open;
+        return {
+          value: d.volume,
+          itemStyle: {
+            color: isUp ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'  // 涨绿跌红
+          }
+        };
+      });
+
       series.push({
         name: '交易量',
         type: 'bar',
-        data: volumes,
+        data: volumeData,
         yAxisIndex: 2,
-        itemStyle: {
-          color: 'rgba(156, 163, 175, 0.5)'
-        },
         barMaxWidth: 10
       });
     }

@@ -155,21 +155,28 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
         itemStyle: {
           color: '#a78bfa'
         }
-      },
-      {
-        name: '价格（原始）',
-        type: 'line',
-        data: pricesOriginal,
-        yAxisIndex: 1,
-        smooth: false,
-        symbol: 'none',
-        lineStyle: {
-          color: '#fbbf24',
-          width: 1.5,
-          type: 'dashed'
-        }
       }
     ];
+
+    // 添加K线图（原始价格）
+    const candlestickData = data.map(d =>
+      d.open !== undefined && d.close !== undefined && d.low !== undefined && d.high !== undefined
+        ? [d.open, d.close, d.low, d.high]
+        : null
+    );
+
+    series.push({
+      name: 'K线',
+      type: 'candlestick',
+      data: candlestickData,
+      yAxisIndex: 1,
+      itemStyle: {
+        color: '#22c55e',
+        color0: '#ef4444',
+        borderColor: '#22c55e',
+        borderColor0: '#ef4444'
+      }
+    });
 
     const ma7Original = data.map(d => d.ma120 ?? null);
     const ma25Original = data.map(d => d.ma240 ?? null);
@@ -237,14 +244,23 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
     }
 
     if (volumes.some(v => v !== null)) {
+      const volumeData = data.map((d) => {
+        if (d.volume === undefined) return null;
+
+        const isUp = d.close !== undefined && d.open !== undefined && d.close >= d.open;
+        return {
+          value: d.volume,
+          itemStyle: {
+            color: isUp ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'
+          }
+        };
+      });
+
       series.push({
         name: '交易量',
         type: 'bar',
-        data: volumes,
+        data: volumeData,
         yAxisIndex: 2,
-        itemStyle: {
-          color: 'rgba(156, 163, 175, 0.5)'
-        },
         barMaxWidth: 10
       });
     }

@@ -130,6 +130,10 @@ function App() {
 
           const kline = klineData ? klineData[klineData.length - globalRatios.length + index] : null;
           const price = kline ? parseFloat(kline.close) : undefined;
+          const open = kline ? parseFloat(kline.open) : undefined;
+          const high = kline ? parseFloat(kline.high) : undefined;
+          const low = kline ? parseFloat(kline.low) : undefined;
+          const close = kline ? parseFloat(kline.close) : undefined;
           const volume = kline ? parseFloat(kline.volume) : undefined;
 
           return {
@@ -144,6 +148,10 @@ function App() {
             bigUserLong: parseFloat(topTrader.longAccount) * 100,
             bigUserShort: parseFloat(topTrader.shortAccount) * 100,
             price,
+            open,
+            high,
+            low,
+            close,
             ma120: ma120Values[index],
             ma240: ma240Values[index],
             volume
