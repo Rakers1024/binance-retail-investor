@@ -246,12 +246,15 @@ export default function LineChart({ data, showPrice }: LineChartProps) {
       });
 
       if (volumes.some(v => v !== null)) {
+        const maxVolume = Math.max(...volumes.filter(v => v !== null) as number[]);
         yAxis.push({
           type: 'value',
           name: '交易量',
           position: 'right',
           offset: 60,
-          scale: true,
+          min: 0,
+          max: maxVolume * 5,
+          scale: false,
           axisLabel: {
             formatter: (value: number) => {
               if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;

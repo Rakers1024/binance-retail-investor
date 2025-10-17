@@ -426,7 +426,9 @@ export default function MinMaxNormalizedChart({ data }: MinMaxNormalizedChartPro
             name: '\u4ea4\u6613\u91cf',
             position: 'right',
             offset: 60,
-            scale: true,
+            min: 0,
+            max: Math.max(...volumes.filter(v => v !== null) as number[]) * 5,
+            scale: false,
             axisLabel: {
               formatter: (value: number) => {
                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;

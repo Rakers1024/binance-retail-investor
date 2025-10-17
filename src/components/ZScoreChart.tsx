@@ -450,7 +450,9 @@ export default function ZScoreChart({ data }: ZScoreChartProps) {
           name: '交易量',
           position: 'right',
           offset: 60,
-          scale: true,
+          min: 0,
+          max: Math.max(...volumes.filter(v => v !== null) as number[]) * 5,
+          scale: false,
           axisLabel: {
             formatter: (value: number) => {
               if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
